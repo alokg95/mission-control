@@ -3,11 +3,11 @@ import type { TaskStatus } from "../types";
 
 const VALID_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
   inbox: ["assigned"],
-  assigned: ["in_progress"],
-  in_progress: ["review", "blocked"],
-  review: ["done", "assigned"],
+  assigned: ["inbox", "in_progress"],
+  in_progress: ["inbox", "review", "blocked"],
+  review: ["inbox", "done", "assigned"],
   done: [],
-  blocked: ["in_progress", "assigned"],
+  blocked: ["inbox", "in_progress", "assigned"],
 };
 
 export function isValidTransition(from: TaskStatus, to: TaskStatus): boolean {

@@ -13,6 +13,7 @@ import { ToastProvider } from "./lib/toast";
 function Dashboard() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createTaskForAgent, setCreateTaskForAgent] = useState<string | undefined>(undefined);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   // P0-008: Blocked reason prompt state
   const [blockedPrompt, setBlockedPrompt] = useState<{
@@ -29,6 +30,11 @@ function Dashboard() {
         <ErrorBoundary fallbackLabel="Agents">
           <AgentPanel
             onAgentClick={(id) => setSelectedAgentId(id)}
+            onAssignTask={(agentId) => {
+              setCreateTaskForAgent(agentId);
+              setShowCreateModal(true);
+            }}
+            onSendMessage={(agentId) => setSelectedAgentId(agentId)}
           />
         </ErrorBoundary>
         <ErrorBoundary fallbackLabel="Mission Queue">
@@ -56,7 +62,13 @@ function Dashboard() {
       )}
 
       {showCreateModal && (
-        <CreateTaskModal onClose={() => setShowCreateModal(false)} />
+        <CreateTaskModal
+          preSelectedAgentId={createTaskForAgent}
+          onClose={() => {
+            setShowCreateModal(false);
+            setCreateTaskForAgent(undefined);
+          }}
+        />
       )}
 
       {selectedAgentId && (

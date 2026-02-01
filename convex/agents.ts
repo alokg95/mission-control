@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./auth";
 
 export const list = query({
   args: {},
@@ -15,6 +16,7 @@ export const updateStatus = mutation({
     currentTaskId: v.optional(v.id("tasks")),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     await ctx.db.patch(args.agentId, {
       status: args.status,
       currentTaskId: args.currentTaskId,

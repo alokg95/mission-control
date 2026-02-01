@@ -1,6 +1,6 @@
-// P0-006: Notification dropdown panel
+// P0-006: Notification dropdown panel — uses real notification records
 import { useEffect, useRef } from "react";
-import { useAgents, useActivities } from "../../lib/store-context";
+import { useAgents, useNotifications, useStore, USE_CONVEX } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import { timeAgo } from "../../lib/utils";
 
@@ -8,13 +8,11 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-// In mock mode, we derive "notifications" from recent activities
-// In Convex mode, this would use notifications.undelivered query
-
 export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const activities = useActivities();
   const agents = useAgents();
+  const allNotifications = useNotifications();
+  const store = USE_CONVEX ? null : useStore();
 
   // Close on click outside
   useEffect(() => {
@@ -27,11 +25,19 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [onClose]);
 
-  // Show recent activities as notifications (mentions, assignments, reviews, escalations)
-  const notifTypes = new Set(["escalation", "handoff", "comment"]);
-  const notifications = activities
-    .filter((a) => notifTypes.has(a.type))
+  // Show undelivered first, then recently delivered, up to 10
+  const notifications = [...allNotifications]
+    .sort((a, b) => {
+      if (a.delivered !== b.delivered) return a.delivered ? 1 : -1;
+      return b._creationTime - a._creationTime;
+    })
     .slice(0, 10);
+
+  const handleMarkRead = (id: string) => {
+    if (store) {
+      store.markDelivered(id);
+    }
+  };
 
   return (
     <div
@@ -56,11 +62,14 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
           </div>
         ) : (
           notifications.map((n) => {
-            const agent = agents.find((a) => a._id === n.agentId);
+            const agent = agents.find((a) => a._id === n.sourceAgentId);
             return (
               <div
                 key={n._id}
-                className="flex items-start gap-2.5 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                className={`flex items-start gap-2.5 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 cursor-pointer ${
+                  !n.delivered ? "bg-blue-50/40" : ""
+                }`}
+                onClick={() => !n.delivered && handleMarkRead(n._id)}
               >
                 {agent ? (
                   <Avatar name={agent.name} color={agent.avatarColor} size="sm" />
@@ -69,11 +78,16 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-2">
-                    {n.message}
+                    {n.content}
                   </p>
-                  <span className="text-[9px] text-gray-300 mt-0.5 block">
-                    {timeAgo(n._creationTime)}
-                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[9px] text-gray-300 block">
+                      {timeAgo(n._creationTime)}
+                    </span>
+                    {!n.delivered && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                    )}
+                  </div>
                 </div>
               </div>
             );

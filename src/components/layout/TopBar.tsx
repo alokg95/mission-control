@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAgents, useTasks, USE_CONVEX } from "../../lib/store-context";
+import { useAgents, useTasks, useUnreadNotificationCount, USE_CONVEX } from "../../lib/store-context";
 import { formatClockTime, formatClockDate } from "../../lib/utils";
 import { NotificationDropdown } from "../notifications/NotificationDropdown";
 
@@ -14,6 +14,7 @@ export function TopBar({ onNewTask }: TopBarProps) {
   const [clockDate, setClockDate] = useState(formatClockDate());
   const [showNotifications, setShowNotifications] = useState(false);
   // P0-009: Connection status (for Convex mode we'll check simple presence; mock always online)
+  const unreadCount = useUnreadNotificationCount();
   const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
@@ -104,10 +105,12 @@ export function TopBar({ onNewTask }: TopBarProps) {
             aria-label="Notifications"
           >
             🔔
-            {/* Unread count badge — shown as example; real count from notifications hook */}
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notification-badge">
-              !
-            </span>
+            {/* Unread count badge */}
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notification-badge">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </button>
           {showNotifications && (
             <NotificationDropdown onClose={() => setShowNotifications(false)} />

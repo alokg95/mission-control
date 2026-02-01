@@ -242,18 +242,79 @@ function useMockMutations(): StoreMutations {
         taskId,
         message: `Moved task to ${status.replace("_", " ")}`,
       });
+      // Notification: status→review triggers review_request to assignees
+      if (status === "review") {
+        const task = s.tasks.find((t) => t._id === taskId);
+        if (task) {
+          for (const assigneeId of task.assigneeIds) {
+            if (assigneeId !== "agent_alo") {
+              s.createNotification({
+                targetAgentId: assigneeId,
+                sourceAgentId: "agent_alo",
+                content: `Task '${task.title}' moved to Review`,
+                taskId,
+                type: "review_request",
+              });
+            }
+          }
+        }
+      }
     },
     createTask: (task) => {
-      s.createTask(task);
+      const newTask = s.createTask(task);
       s.addActivity({
         type: "task_update",
         agentId: "agent_alo",
         message: `Created task: '${task.title}'`,
       });
+      // Notification: assignment
+      for (const assigneeId of task.assigneeIds) {
+        s.createNotification({
+          targetAgentId: assigneeId,
+          sourceAgentId: "agent_alo",
+          content: `You were assigned '${task.title}'`,
+          taskId: newTask._id,
+          type: "assignment",
+        });
+      }
     },
-    updateTask: (taskId, updates) => s.updateTask(taskId, updates),
+    updateTask: (taskId, updates) => {
+      const oldTask = s.tasks.find((t) => t._id === taskId);
+      s.updateTask(taskId, updates);
+      // Notification: new assignees
+      if (updates.assigneeIds && oldTask) {
+        const oldIds = new Set(oldTask.assigneeIds);
+        for (const id of updates.assigneeIds) {
+          if (!oldIds.has(id)) {
+            s.createNotification({
+              targetAgentId: id,
+              sourceAgentId: "agent_alo",
+              content: `You were assigned '${oldTask.title}'`,
+              taskId,
+              type: "assignment",
+            });
+          }
+        }
+      }
+    },
     deleteTask: (taskId) => s.deleteTask(taskId),
-    addMessage: (msg) => s.addMessage(msg),
+    addMessage: (msg) => {
+      s.addMessage(msg);
+      // Notification: @mentions in comments
+      if (msg.mentions) {
+        for (const mentionId of msg.mentions) {
+          if (mentionId !== msg.fromAgentId) {
+            s.createNotification({
+              targetAgentId: mentionId,
+              sourceAgentId: msg.fromAgentId,
+              content: `You were mentioned in a comment on a task`,
+              taskId: msg.taskId,
+              type: "mention",
+            });
+          }
+        }
+      }
+    },
     addActivity: (act) => s.addActivity(act),
   };
 }
@@ -312,6 +373,39 @@ function useConvexMutations(): StoreMutations {
       });
     },
   };
+}
+
+// ===================== NOTIFICATION HOOKS =====================
+
+function useMockNotifications(): NotificationDoc[] {
+  const s = useStore();
+  return useSyncExternalStore(
+    useCallback((cb: () => void) => s.subscribe(cb), [s]),
+    () => s.notifications as NotificationDoc[]
+  );
+}
+
+export function useNotifications(): NotificationDoc[] {
+  if (USE_CONVEX) {
+    // In Convex mode, notifications are fetched via the notifications.undelivered query
+    return [];
+  }
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useMockNotifications();
+}
+
+export function useUnreadNotificationCount(): number {
+  if (USE_CONVEX) {
+    return 0;
+  }
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const s = useStore();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return useSyncExternalStore(
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useCallback((cb: () => void) => s.subscribe(cb), [s]),
+    () => s.getUndeliveredNotifications().length
+  );
 }
 
 // Re-export for compatibility

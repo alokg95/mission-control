@@ -15,6 +15,8 @@ interface AgentCardProps {
   avatarColor: string;
   currentTaskId?: string;
   onClick: () => void;
+  onAssignTask?: (agentId: string) => void;
+  onSendMessage?: (agentId: string) => void;
 }
 
 const levelVariants: Record<AgentLevel, "teal" | "dark" | "amber"> = {
@@ -24,6 +26,7 @@ const levelVariants: Record<AgentLevel, "teal" | "dark" | "amber"> = {
 };
 
 export function AgentCard({
+  id,
   name,
   role,
   level,
@@ -31,6 +34,8 @@ export function AgentCard({
   avatarColor,
   currentTaskId,
   onClick,
+  onAssignTask,
+  onSendMessage,
 }: AgentCardProps) {
   const tasks = useTasks();
   const currentTask = currentTaskId
@@ -108,7 +113,19 @@ export function AgentCard({
             </button>
             {showMenu && (
               <div className="absolute right-0 top-7 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1">
-                {["Assign Task", "Send Message", "View Session Log", "Restart Session"].map(
+                <button
+                  className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                  onClick={() => { setShowMenu(false); onAssignTask?.(id); }}
+                >
+                  Assign Task
+                </button>
+                <button
+                  className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                  onClick={() => { setShowMenu(false); onSendMessage?.(id); }}
+                >
+                  Send Message
+                </button>
+                {["View Session Log", "Restart Session"].map(
                   (action) => (
                     <button
                       key={action}

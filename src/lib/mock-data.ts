@@ -359,6 +359,20 @@ export const mockMessages: MockMessage[] = [
   },
 ];
 
+type MockNotification = {
+  _id: string;
+  _creationTime: number;
+  targetAgentId: string;
+  sourceAgentId: string;
+  content: string;
+  taskId?: string;
+  type: "mention" | "assignment" | "review_request" | "escalation" | "block_alert";
+  delivered: boolean;
+  deliveredAt?: number;
+};
+
+export const mockNotifications: MockNotification[] = [];
+
 // Helper to get agent by ID
 export function getAgent(id: string): MockAgent | undefined {
   return mockAgents.find((a) => a._id === id);
@@ -370,6 +384,7 @@ export class MockStore {
   tasks: MockTask[];
   activities: MockActivity[];
   messages: MockMessage[];
+  notifications: MockNotification[];
   private listeners: Set<() => void> = new Set();
 
   constructor() {
@@ -377,6 +392,7 @@ export class MockStore {
     this.tasks = [...mockTasks];
     this.activities = [...mockActivities];
     this.messages = [...mockMessages];
+    this.notifications = [...mockNotifications];
   }
 
   subscribe(listener: () => void): () => void {
@@ -451,6 +467,32 @@ export class MockStore {
   deleteTask(taskId: string) {
     this.tasks = this.tasks.filter((t) => t._id !== taskId);
     this.notify();
+  }
+
+  createNotification(notif: Omit<MockNotification, "_id" | "_creationTime" | "delivered" | "deliveredAt">) {
+    const newNotif: MockNotification = {
+      ...notif,
+      _id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      _creationTime: Date.now(),
+      delivered: false,
+      deliveredAt: undefined,
+    };
+    this.notifications = [newNotif, ...this.notifications];
+    this.notify();
+    return newNotif;
+  }
+
+  markDelivered(notificationId: string) {
+    this.notifications = this.notifications.map((n) =>
+      n._id === notificationId ? { ...n, delivered: true, deliveredAt: Date.now() } : n
+    );
+    this.notify();
+  }
+
+  getUndeliveredNotifications(targetAgentId?: string): MockNotification[] {
+    return this.notifications.filter(
+      (n) => !n.delivered && (!targetAgentId || n.targetAgentId === targetAgentId)
+    );
   }
 }
 

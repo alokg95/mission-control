@@ -5,9 +5,11 @@ import type { AgentStatus } from "../../types";
 
 interface AgentPanelProps {
   onAgentClick: (agentId: string) => void;
+  onAssignTask?: (agentId: string) => void;
+  onSendMessage?: (agentId: string) => void;
 }
 
-export function AgentPanel({ onAgentClick }: AgentPanelProps) {
+export function AgentPanel({ onAgentClick, onAssignTask, onSendMessage }: AgentPanelProps) {
   const agents = useAgents();
 
   return (
@@ -38,6 +40,8 @@ export function AgentPanel({ onAgentClick }: AgentPanelProps) {
             avatarColor={agent.avatarColor}
             currentTaskId={agent.currentTaskId}
             onClick={() => onAgentClick(agent._id)}
+            onAssignTask={onAssignTask}
+            onSendMessage={onSendMessage}
           />
         ))}
       </div>

@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./auth";
 
 export const list = query({
   args: {},
@@ -43,6 +44,7 @@ export const create = mutation({
     createdBy: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db.insert("tasks", {
       ...args,
       blockedReason: undefined,
@@ -66,6 +68,7 @@ export const updateStatus = mutation({
     blockedReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const patch: Record<string, unknown> = { status: args.status };
     if (args.status === "done") {
       patch.completedAt = Date.now();
@@ -90,6 +93,7 @@ export const update = mutation({
     tags: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const { taskId, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, val]) => val !== undefined)
@@ -101,6 +105,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { taskId: v.id("tasks") },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     await ctx.db.delete(args.taskId);
   },
 });

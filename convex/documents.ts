@@ -1,6 +1,7 @@
 // P1-017: Documents Convex functions
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./auth";
 
 export const list = query({
   args: {},
@@ -41,6 +42,7 @@ export const create = mutation({
     authorAgentId: v.id("agents"),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db.insert("documents", args);
   },
 });
@@ -52,6 +54,7 @@ export const update = mutation({
     content: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     const { documentId, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, val]) => val !== undefined)
@@ -63,6 +66,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { documentId: v.id("documents") },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     await ctx.db.delete(args.documentId);
   },
 });

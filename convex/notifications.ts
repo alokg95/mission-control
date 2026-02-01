@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./auth";
 
 export const undelivered = query({
   args: { targetAgentId: v.id("agents") },
@@ -28,6 +29,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db.insert("notifications", {
       ...args,
       delivered: false,
@@ -39,6 +41,7 @@ export const create = mutation({
 export const markDelivered = mutation({
   args: { notificationId: v.id("notifications") },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     await ctx.db.patch(args.notificationId, {
       delivered: true,
       deliveredAt: Date.now(),

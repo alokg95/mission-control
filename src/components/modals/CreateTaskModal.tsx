@@ -6,15 +6,18 @@ import { PRIORITY_LABELS, PRIORITY_COLORS } from "../../types";
 
 interface CreateTaskModalProps {
   onClose: () => void;
+  preSelectedAgentId?: string;
 }
 
-export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
+export function CreateTaskModal({ onClose, preSelectedAgentId }: CreateTaskModalProps) {
   const mutations = useMutations();
   const agents = useAgents();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<Priority>("p2");
-  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+  const [selectedAgents, setSelectedAgents] = useState<string[]>(
+    preSelectedAgentId ? [preSelectedAgentId] : []
+  );
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   // P0-010: title validation

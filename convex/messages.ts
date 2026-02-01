@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAuth } from "./auth";
 
 export const byTask = query({
   args: { taskId: v.id("tasks") },
@@ -19,6 +20,7 @@ export const send = mutation({
     mentions: v.optional(v.array(v.id("agents"))),
   },
   handler: async (ctx, args) => {
+    await requireAuth(ctx);
     return await ctx.db.insert("messages", {
       taskId: args.taskId,
       fromAgentId: args.fromAgentId,
