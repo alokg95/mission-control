@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useAgents, useStore } from "../../lib/store-context";
+import { useState, useEffect, useRef } from "react";
+import { useAgents, useMutations } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import type { Priority } from "../../types";
 import { PRIORITY_LABELS, PRIORITY_COLORS } from "../../types";
@@ -9,7 +9,7 @@ interface CreateTaskModalProps {
 }
 
 export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
-  const store = useStore();
+  const mutations = useMutations();
   const agents = useAgents();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -17,6 +17,33 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  // P0-010: title validation
+  const [titleError, setTitleError] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // P1-007: Focus trap + Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab" && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   const handleAddTag = () => {
     const tag = tagInput.trim().toLowerCase();
@@ -27,9 +54,13 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
   };
 
   const handleSubmit = () => {
-    if (!title.trim()) return;
+    // P0-010: Validate non-empty title
+    if (!title.trim()) {
+      setTitleError(true);
+      return;
+    }
     const status = selectedAgents.length > 0 ? "assigned" : "inbox";
-    store.createTask({
+    mutations.createTask({
       title: title.trim(),
       description: description.trim(),
       status,
@@ -37,11 +68,6 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
       assigneeIds: selectedAgents,
       tags,
       createdBy: "alok",
-    });
-    store.addActivity({
-      type: "task_update",
-      agentId: "agent_alo",
-      message: `Created task: '${title.trim()}'`,
     });
     onClose();
   };
@@ -61,6 +87,7 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
       aria-label="Create new task"
     >
       <div
+        ref={modalRef}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -69,7 +96,7 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
         </div>
 
         <div className="p-5 space-y-4">
-          {/* Title */}
+          {/* Title — P0-010: validation */}
           <div>
             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
               Title
@@ -77,11 +104,21 @@ export function CreateTaskModal({ onClose }: CreateTaskModalProps) {
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (e.target.value.trim()) setTitleError(false);
+              }}
               placeholder="What needs to be done?"
-              className="w-full text-sm bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-200 focus:outline-none focus:border-brand-teal placeholder:text-gray-300"
+              className={`w-full text-sm bg-gray-50 rounded-lg px-3 py-2.5 border focus:outline-none placeholder:text-gray-300 ${
+                titleError
+                  ? "border-red-400 focus:border-red-500"
+                  : "border-gray-200 focus:border-brand-teal"
+              }`}
               autoFocus
             />
+            {titleError && (
+              <p className="text-[10px] text-red-500 mt-1">Title is required</p>
+            )}
           </div>
 
           {/* Description */}

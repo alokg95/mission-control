@@ -10,18 +10,40 @@ export function timeAgo(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString();
 }
 
-export function formatClock(): string {
+// P1-004: Large monospace clock + date
+export function formatClockTime(): string {
   const now = new Date();
-  return now.toLocaleString("en-US", {
+  return now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+export function formatClockDate(): string {
+  const now = new Date();
+  return now.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  }).toUpperCase();
+}
+
+// Keep old one for backward compat
+export function formatClock(): string {
+  return `${formatClockTime()} ${formatClockDate()}`;
 }
 
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
+}
+
+export function absoluteTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

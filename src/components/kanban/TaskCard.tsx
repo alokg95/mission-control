@@ -96,7 +96,7 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Footer: Assignees + Time */}
+      {/* Footer: Assignees + Time — P1-014: relative age */}
       <div className="flex items-center justify-between mt-2.5">
         <div className="flex -space-x-1.5">
           {assignees.map((a) =>
@@ -111,7 +111,9 @@ export function TaskCard({
             ) : null
           )}
         </div>
-        <span className="text-[10px] text-gray-300">{timeAgo(creationTime)}</span>
+        <span className="text-[10px] text-gray-300" title={new Date(creationTime).toLocaleString()}>
+          {timeAgo(creationTime)}
+        </span>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { StatusDot } from "../ui/StatusDot";
@@ -13,6 +14,7 @@ interface AgentCardProps {
   status: AgentStatus;
   avatarColor: string;
   currentTaskId?: string;
+  onClick: () => void;
 }
 
 const levelVariants: Record<AgentLevel, "teal" | "dark" | "amber"> = {
@@ -28,48 +30,100 @@ export function AgentCard({
   status,
   avatarColor,
   currentTaskId,
+  onClick,
 }: AgentCardProps) {
   const tasks = useTasks();
   const currentTask = currentTaskId
     ? tasks.find((t) => t._id === currentTaskId)
     : undefined;
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // P0-005: Close kebab menu on outside click
+  useEffect(() => {
+    if (!showMenu) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showMenu]);
 
   return (
-    <button
-      className="w-full text-left p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-teal-light hover:shadow-sm transition-all group cursor-pointer"
-      aria-label={`Agent ${name}, ${status}`}
-    >
-      <div className="flex items-start gap-3">
-        <Avatar name={name} color={avatarColor} size="md" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-brand-charcoal">{name}</span>
-            <Badge variant={levelVariants[level]}>{LEVEL_LABELS[level]}</Badge>
-          </div>
-          <div className="text-[11px] text-gray-400 mt-0.5">{role}</div>
-          <div className="flex items-center gap-1.5 mt-1.5">
-            <StatusDot status={status} pulse={status === "working"} />
-            <span
-              className="text-[10px] font-semibold uppercase tracking-wider"
-              style={{
-                color:
-                  status === "working"
-                    ? "#2ABFBF"
-                    : status === "blocked"
-                      ? "#E74C3C"
-                      : "#94A3B8",
-              }}
-            >
-              {status}
-            </span>
-          </div>
-          {currentTask && (
-            <div className="mt-2 text-[11px] text-gray-500 truncate">
-              🔧 {currentTask.title}
+    <div className="relative">
+      <button
+        className="w-full text-left p-3 bg-white rounded-xl border border-gray-100 hover:border-brand-teal-light hover:shadow-sm transition-all group cursor-pointer"
+        aria-label={`Agent ${name}, ${status}`}
+        onClick={onClick}
+      >
+        <div className="flex items-start gap-3">
+          <Avatar name={name} color={avatarColor} size="md" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-brand-charcoal">{name}</span>
+              <Badge variant={levelVariants[level]}>{LEVEL_LABELS[level]}</Badge>
             </div>
-          )}
+            <div className="text-[11px] text-gray-400 mt-0.5">{role}</div>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <StatusDot status={status} pulse={status === "working"} />
+              <span
+                className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{
+                  color:
+                    status === "working"
+                      ? "#2ABFBF"
+                      : status === "blocked"
+                        ? "#E74C3C"
+                        : "#94A3B8",
+                }}
+              >
+                {status}
+              </span>
+            </div>
+            {/* P1-013: Show current task on card */}
+            {currentTask && (
+              <div className="mt-2 text-[11px] text-gray-500 truncate">
+                🔧 {currentTask.title}
+              </div>
+            )}
+          </div>
+
+          {/* P0-005: Kebab menu */}
+          <div
+            ref={menuRef}
+            className="relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu((prev) => !prev);
+              }}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+              aria-label="Agent actions"
+            >
+              ⋮
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 top-7 w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1">
+                {["Assign Task", "Send Message", "View Session Log", "Restart Session"].map(
+                  (action) => (
+                    <button
+                      key={action}
+                      className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      {action}
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }

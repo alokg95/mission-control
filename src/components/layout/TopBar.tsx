@@ -1,19 +1,48 @@
-import { useState, useEffect } from "react";
-import { useAgents, useTasks } from "../../lib/store-context";
-import { formatClock } from "../../lib/utils";
+import { useState, useEffect, useCallback } from "react";
+import { useAgents, useTasks, USE_CONVEX } from "../../lib/store-context";
+import { formatClockTime, formatClockDate } from "../../lib/utils";
+import { NotificationDropdown } from "../notifications/NotificationDropdown";
 
-export function TopBar() {
+interface TopBarProps {
+  onNewTask: () => void;
+}
+
+export function TopBar({ onNewTask }: TopBarProps) {
   const agents = useAgents();
   const tasks = useTasks();
-  const [clock, setClock] = useState(formatClock());
+  const [clockTime, setClockTime] = useState(formatClockTime());
+  const [clockDate, setClockDate] = useState(formatClockDate());
+  const [showNotifications, setShowNotifications] = useState(false);
+  // P0-009: Connection status (for Convex mode we'll check simple presence; mock always online)
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => setClock(formatClock()), 10000);
+    const interval = setInterval(() => {
+      setClockTime(formatClockTime());
+      setClockDate(formatClockDate());
+    }, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // P0-009: Track browser online/offline + Convex connectivity
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    setIsOnline(navigator.onLine);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const activeCount = agents.filter((a) => a.status !== "offline").length;
   const taskCount = tasks.filter((t) => t.status !== "done").length;
+
+  const toggleNotifications = useCallback(() => {
+    setShowNotifications((prev) => !prev);
+  }, []);
 
   return (
     <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-6 shrink-0">
@@ -49,18 +78,66 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Right: Clock + Status */}
+      {/* Right: Actions + Clock + Status */}
       <div className="flex items-center gap-4">
+        {/* New Task button */}
+        <button
+          onClick={onNewTask}
+          className="px-3 py-1.5 text-xs font-medium text-white bg-brand-teal rounded-lg hover:bg-brand-teal-dark transition-colors"
+          aria-label="New Task"
+        >
+          + New Task
+        </button>
+
         <button
           className="px-3 py-1.5 text-xs font-medium text-brand-teal-dark bg-brand-teal-light rounded-lg hover:bg-brand-teal/20 transition-colors"
           aria-label="Documents"
         >
           📄 Docs
         </button>
-        <span className="text-xs text-gray-400 font-medium tabular-nums">{clock}</span>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-semibold uppercase tracking-wider rounded-full">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-          Online
+
+        {/* P0-006: Notification bell */}
+        <div className="relative">
+          <button
+            onClick={toggleNotifications}
+            className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Notifications"
+          >
+            🔔
+            {/* Unread count badge — shown as example; real count from notifications hook */}
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notification-badge">
+              !
+            </span>
+          </button>
+          {showNotifications && (
+            <NotificationDropdown onClose={() => setShowNotifications(false)} />
+          )}
+        </div>
+
+        {/* P1-004: Clock with large monospace time + date below */}
+        <div className="text-right">
+          <div className="clock-display text-lg font-bold text-brand-charcoal leading-none">
+            {clockTime}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-gray-400 font-medium mt-0.5">
+            {clockDate}
+          </div>
+        </div>
+
+        {/* P0-009: Connection status */}
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full ${
+            isOnline
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-red-50 text-red-600"
+          }`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              isOnline ? "bg-emerald-500 animate-pulse" : "bg-red-500"
+            }`}
+          />
+          {isOnline ? (USE_CONVEX ? "Live" : "Local") : "Offline"}
         </span>
       </div>
     </header>

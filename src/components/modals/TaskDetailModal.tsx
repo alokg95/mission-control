@@ -1,55 +1,104 @@
-import { useState } from "react";
-import { useAgents, useMessages, useStore } from "../../lib/store-context";
+import { useState, useEffect, useRef } from "react";
+import { useAgents, useMessagesByTask, useTasks, useMutations } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
-import { timeAgo } from "../../lib/utils";
+import { timeAgo, absoluteTime } from "../../lib/utils";
 import {
   COLUMN_LABELS,
   PRIORITY_LABELS,
   PRIORITY_COLORS,
-  COLUMN_ORDER,
 } from "../../types";
 import type { TaskStatus, Priority } from "../../types";
+import { getValidNextStatuses } from "../../lib/task-state-machine";
+import { extractMentions, renderWithMentions } from "../../lib/mention-parser";
+import { useToast } from "../../lib/toast";
 
 interface TaskDetailModalProps {
   taskId: string;
   onClose: () => void;
+  onBlockedPrompt: (taskId: string, taskTitle: string) => void;
 }
 
-export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
-  const store = useStore();
+export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetailModalProps) {
   const agents = useAgents();
-  const allMessages = useMessages();
-  const task = store.tasks.find((t) => t._id === taskId);
-  const messages = allMessages.filter((m) => m.taskId === taskId);
+  const tasks = useTasks();
+  const mutations = useMutations();
+  const messages = useMessagesByTask(taskId);
+  const { toast } = useToast();
+  const task = tasks.find((t) => t._id === taskId);
   const [newComment, setNewComment] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task?.title ?? "");
   const [editDesc, setEditDesc] = useState(task?.description ?? "");
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // P1-007: Focus trap + Escape to close
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+      // Trap tab
+      if (e.key === "Tab" && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   if (!task) return null;
 
+  // P0-003: Only show valid next statuses
+  const validNextStatuses = getValidNextStatuses(task.status);
+
   const handleStatusChange = (newStatus: TaskStatus) => {
-    store.updateTaskStatus(taskId, newStatus);
-    store.addActivity({
-      type: "task_update",
-      agentId: "agent_alo",
-      taskId,
-      message: `Moved '${task.title}' to ${COLUMN_LABELS[newStatus]}`,
-    });
+    if (newStatus === task.status) return;
+
+    // P0-008: Blocked needs reason
+    if (newStatus === "blocked") {
+      onBlockedPrompt(taskId, task.title);
+      return;
+    }
+
+    // P1-018: Confirm rejection
+    if (task.status === "review" && newStatus === "assigned") {
+      if (!window.confirm(`Reject "${task.title}" and send back to Assigned?`)) return;
+    }
+
+    mutations.updateTaskStatus(taskId, newStatus);
+    toast(`Moved to ${COLUMN_LABELS[newStatus]}`, "success");
   };
 
   const handleSaveEdit = () => {
-    store.updateTask(taskId, { title: editTitle, description: editDesc });
+    // P0-010: Title validation
+    if (!editTitle.trim()) {
+      toast("Title cannot be empty", "error");
+      return;
+    }
+    mutations.updateTask(taskId, { title: editTitle, description: editDesc });
     setIsEditing(false);
   };
 
   const handleComment = () => {
     if (!newComment.trim()) return;
-    store.addMessage({
+    // P0-007: Extract mentions
+    const mentionIds = extractMentions(newComment, agents);
+    mutations.addMessage({
       taskId,
-      fromAgentId: "agent_alo",
+      fromAgentId: agents[0]?._id ?? "unknown",
       content: newComment.trim(),
+      mentions: mentionIds.length > 0 ? mentionIds : undefined,
     });
     setNewComment("");
   };
@@ -57,16 +106,16 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const handleAssign = (agentId: string) => {
     const currentIds = task.assigneeIds;
     if (currentIds.includes(agentId)) {
-      store.updateTask(taskId, {
+      mutations.updateTask(taskId, {
         assigneeIds: currentIds.filter((id) => id !== agentId),
       });
     } else {
-      store.updateTask(taskId, { assigneeIds: [...currentIds, agentId] });
+      mutations.updateTask(taskId, { assigneeIds: [...currentIds, agentId] });
     }
   };
 
   const handlePriorityChange = (p: Priority) => {
-    store.updateTask(taskId, { priority: p });
+    mutations.updateTask(taskId, { priority: p });
   };
 
   return (
@@ -78,6 +127,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
       aria-label={`Task: ${task.title}`}
     >
       <div
+        ref={modalRef}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -101,16 +151,19 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
                 </h2>
               )}
 
-              {/* Status + Priority row */}
+              {/* Status + Priority row — P0-003: only valid next statuses */}
               <div className="flex items-center gap-2 mt-2">
                 <select
                   value={task.status}
                   onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
                   className="text-[11px] font-semibold uppercase tracking-wider bg-brand-teal-light text-brand-teal-dark px-2 py-1 rounded-lg border-none cursor-pointer focus:outline-none"
                 >
-                  {COLUMN_ORDER.map((s) => (
+                  <option value={task.status}>
+                    {COLUMN_LABELS[task.status]}
+                  </option>
+                  {validNextStatuses.map((s) => (
                     <option key={s} value={s}>
-                      {COLUMN_LABELS[s]}
+                      → {COLUMN_LABELS[s]}
                     </option>
                   ))}
                 </select>
@@ -120,8 +173,8 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
                   onChange={(e) => handlePriorityChange(e.target.value as Priority)}
                   className="text-[11px] font-semibold px-2 py-1 rounded-lg border-none cursor-pointer focus:outline-none"
                   style={{
-                    backgroundColor: `${PRIORITY_COLORS[task.priority as Priority]}20`,
-                    color: PRIORITY_COLORS[task.priority as Priority],
+                    backgroundColor: `${PRIORITY_COLORS[task.priority]}20`,
+                    color: PRIORITY_COLORS[task.priority],
                   }}
                 >
                   {(["p0", "p1", "p2", "p3"] as Priority[]).map((p) => (
@@ -236,7 +289,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             )}
           </div>
 
-          {/* Comment Thread */}
+          {/* Comment Thread — P0-007: @mention highlighting */}
           <div>
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
               Activity Thread
@@ -260,12 +313,12 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
                         <span className="text-xs font-semibold text-brand-charcoal">
                           {agent?.name ?? "Unknown"}
                         </span>
-                        <span className="text-[9px] text-gray-300">
+                        <span className="text-[9px] text-gray-300" title={absoluteTime(msg._creationTime)}>
                           {timeAgo(msg._creationTime)}
                         </span>
                       </div>
                       <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
-                        {msg.content}
+                        {renderWithMentions(msg.content, agents)}
                       </p>
                     </div>
                   </div>
@@ -288,7 +341,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleComment()}
-              placeholder="Add a comment..."
+              placeholder="Add a comment... (use @Name to mention)"
               className="flex-1 text-sm bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 focus:outline-none focus:border-brand-teal placeholder:text-gray-300"
             />
             <button

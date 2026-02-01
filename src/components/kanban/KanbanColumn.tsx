@@ -3,6 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { TaskCard } from "./TaskCard";
 import type { TaskStatus, Priority } from "../../types";
 import { COLUMN_LABELS } from "../../types";
+import { cn } from "../../lib/utils";
 
 interface TaskItem {
   _id: string;
@@ -37,11 +38,15 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
 
   return (
     <div
-      className={`flex flex-col min-w-[260px] w-[260px] shrink-0 rounded-xl transition-colors ${
-        isOver ? "bg-brand-teal-light/30" : "bg-transparent"
-      }`}
+      className={cn(
+        // P1-005: wider columns
+        "flex flex-col min-w-[290px] w-[290px] shrink-0 rounded-xl transition-colors",
+        isOver && "bg-brand-teal-light/30",
+        // P1-015: Blocked column red accent
+        status === "blocked" && "kanban-column-blocked"
+      )}
     >
-      {/* Column Header */}
+      {/* Column Header — P1-011: count in header */}
       <div className="flex items-center gap-2 px-3 py-2.5 mb-2">
         <span
           className="w-2 h-2 rounded-full shrink-0"
@@ -53,6 +58,7 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
         <span className="ml-auto px-1.5 py-0.5 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-md">
           {tasks.length}
         </span>
+        {/* P1-012: "+" button on Inbox column */}
         {status === "inbox" && onNewTask && (
           <button
             onClick={onNewTask}
@@ -73,20 +79,30 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
           items={tasks.map((t) => t._id)}
           strategy={verticalListSortingStrategy}
         >
-          {tasks.map((task) => (
-            <TaskCard
-              key={task._id}
-              id={task._id}
-              title={task.title}
-              description={task.description}
-              priority={task.priority}
-              tags={task.tags}
-              assigneeIds={task.assigneeIds}
-              creationTime={task._creationTime}
-              blockedReason={task.blockedReason}
-              onClick={() => onTaskClick(task._id)}
-            />
-          ))}
+          {tasks.length === 0 ? (
+            // P1-016: Empty column state
+            <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+              <div className="text-2xl mb-2">
+                {status === "inbox" ? "📥" : status === "done" ? "✅" : status === "blocked" ? "🚧" : "📋"}
+              </div>
+              <p className="text-[11px]">No tasks</p>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <TaskCard
+                key={task._id}
+                id={task._id}
+                title={task.title}
+                description={task.description}
+                priority={task.priority}
+                tags={task.tags}
+                assigneeIds={task.assigneeIds}
+                creationTime={task._creationTime}
+                blockedReason={task.blockedReason}
+                onClick={() => onTaskClick(task._id)}
+              />
+            ))
+          )}
         </SortableContext>
       </div>
     </div>

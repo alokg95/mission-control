@@ -3,12 +3,16 @@ import { AgentCard } from "./AgentCard";
 import { StatusDot } from "../ui/StatusDot";
 import type { AgentStatus } from "../../types";
 
-export function AgentPanel() {
+interface AgentPanelProps {
+  onAgentClick: (agentId: string) => void;
+}
+
+export function AgentPanel({ onAgentClick }: AgentPanelProps) {
   const agents = useAgents();
 
   return (
     <aside className="w-64 shrink-0 bg-white/50 backdrop-blur-sm border-r border-brand-teal-light/50 flex flex-col">
-      {/* Header */}
+      {/* P1-003: Section header with colored dot */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <StatusDot status="working" pulse />
@@ -29,10 +33,11 @@ export function AgentPanel() {
             id={agent._id}
             name={agent.name}
             role={agent.role}
-            level={agent.level as "coordinator" | "specialist" | "intern"}
+            level={agent.level}
             status={agent.status as AgentStatus}
             avatarColor={agent.avatarColor}
             currentTaskId={agent.currentTaskId}
+            onClick={() => onAgentClick(agent._id)}
           />
         ))}
       </div>

@@ -16,13 +16,7 @@
   --color-priority-p3: #94A3B8;
 }
 
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-}
+/* P0-011: Inter loaded via index.html <link> tag — no broken @font-face */
 
 body {
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -76,4 +70,38 @@ body {
   opacity: 0.9;
   transform: rotate(2deg) scale(1.02);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* P1-004: Clock typography */
+.clock-display {
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* P1-015: Blocked column red accent */
+.kanban-column-blocked {
+  background: rgba(231, 76, 60, 0.04);
+  border: 1px dashed rgba(231, 76, 60, 0.2);
+}
+
+/* Agent detail slide-out */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.slide-in-right {
+  animation: slideInRight 0.25s ease-out;
+}
+
+/* @mention highlight */
+.mention-highlight {
+  color: #2ABFBF;
+  font-weight: 600;
+  background: rgba(42, 191, 191, 0.1);
+  border-radius: 3px;
+  padding: 0 2px;
 }
