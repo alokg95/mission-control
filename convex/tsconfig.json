@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "convex/_generated/*": ["./_generated/*"]
+    }
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["../node_modules"]
+}
