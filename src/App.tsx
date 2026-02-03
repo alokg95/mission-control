@@ -10,6 +10,8 @@ import { BlockedReasonModal } from "./components/modals/BlockedReasonModal";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ToastProvider } from "./lib/toast";
 
+type MobileTab = "agents" | "tasks" | "feed";
+
 function Dashboard() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -20,36 +22,88 @@ function Dashboard() {
     taskId: string;
     taskTitle: string;
   } | null>(null);
+  // Mobile navigation state
+  const [mobileTab, setMobileTab] = useState<MobileTab>("tasks");
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <ErrorBoundary fallbackLabel="Top Bar">
         <TopBar onNewTask={() => setShowCreateModal(true)} />
       </ErrorBoundary>
-      <div className="flex flex-1 overflow-hidden">
-        <ErrorBoundary fallbackLabel="Agents">
-          <AgentPanel
-            onAgentClick={(id) => setSelectedAgentId(id)}
-            onAssignTask={(agentId) => {
-              setCreateTaskForAgent(agentId);
-              setShowCreateModal(true);
-            }}
-            onSendMessage={(agentId) => setSelectedAgentId(agentId)}
-          />
-        </ErrorBoundary>
-        <ErrorBoundary fallbackLabel="Mission Queue">
-          <KanbanBoard
-            onTaskClick={(id) => setSelectedTaskId(id)}
-            onNewTask={() => setShowCreateModal(true)}
-            onBlockedPrompt={(taskId, taskTitle) =>
-              setBlockedPrompt({ taskId, taskTitle })
-            }
-          />
-        </ErrorBoundary>
-        <ErrorBoundary fallbackLabel="Live Feed">
-          <ActivityFeed />
-        </ErrorBoundary>
+      
+      {/* Desktop: 3-panel layout / Mobile: single panel based on tab */}
+      <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
+        {/* Agent Panel - visible on desktop, or when mobileTab is "agents" */}
+        <div className={`${mobileTab === "agents" ? "flex" : "hidden"} md:flex w-full md:w-auto`}>
+          <ErrorBoundary fallbackLabel="Agents">
+            <AgentPanel
+              onAgentClick={(id) => setSelectedAgentId(id)}
+              onAssignTask={(agentId) => {
+                setCreateTaskForAgent(agentId);
+                setShowCreateModal(true);
+              }}
+              onSendMessage={(agentId) => setSelectedAgentId(agentId)}
+            />
+          </ErrorBoundary>
+        </div>
+        
+        {/* Kanban Board - visible on desktop, or when mobileTab is "tasks" */}
+        <div className={`${mobileTab === "tasks" ? "flex" : "hidden"} md:flex flex-1`}>
+          <ErrorBoundary fallbackLabel="Mission Queue">
+            <KanbanBoard
+              onTaskClick={(id) => setSelectedTaskId(id)}
+              onNewTask={() => setShowCreateModal(true)}
+              onBlockedPrompt={(taskId, taskTitle) =>
+                setBlockedPrompt({ taskId, taskTitle })
+              }
+            />
+          </ErrorBoundary>
+        </div>
+        
+        {/* Activity Feed - visible on desktop, or when mobileTab is "feed" */}
+        <div className={`${mobileTab === "feed" ? "flex" : "hidden"} md:flex w-full md:w-auto`}>
+          <ErrorBoundary fallbackLabel="Live Feed">
+            <ActivityFeed />
+          </ErrorBoundary>
+        </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex md:hidden z-40 safe-area-bottom">
+        <button
+          onClick={() => setMobileTab("agents")}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
+            mobileTab === "agents" 
+              ? "text-brand-teal bg-brand-teal-light/50" 
+              : "text-gray-400"
+          }`}
+        >
+          <span className="text-xl">👥</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Agents</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("tasks")}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
+            mobileTab === "tasks" 
+              ? "text-brand-teal bg-brand-teal-light/50" 
+              : "text-gray-400"
+          }`}
+        >
+          <span className="text-xl">📋</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Tasks</span>
+        </button>
+        <button
+          onClick={() => setMobileTab("feed")}
+          className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
+            mobileTab === "feed" 
+              ? "text-brand-teal bg-brand-teal-light/50" 
+              : "text-gray-400"
+          }`}
+        >
+          <span className="text-xl">📡</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider">Feed</span>
+        </button>
+      </nav>
 
       {selectedTaskId && (
         <TaskDetailModal

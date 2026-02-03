@@ -6,6 +6,7 @@ import { PRIORITY_COLORS } from "../../types";
 import type { Priority } from "../../types";
 import { useAgents } from "../../lib/store-context";
 import { timeAgo } from "../../lib/utils";
+import { cn } from "../../lib/utils";
 
 interface TaskCardProps {
   id: string;
@@ -17,6 +18,7 @@ interface TaskCardProps {
   creationTime: number;
   blockedReason?: string;
   onClick: () => void;
+  isMobile?: boolean;
 }
 
 export function TaskCard({
@@ -29,6 +31,7 @@ export function TaskCard({
   creationTime,
   blockedReason,
   onClick,
+  isMobile,
 }: TaskCardProps) {
   const agents = useAgents();
   const {
@@ -56,9 +59,12 @@ export function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`task-card bg-white rounded-lg border border-gray-100 border-l-[3px] p-3 cursor-grab active:cursor-grabbing ${
-        isDragging ? "opacity-50 shadow-lg" : ""
-      }`}
+      className={cn(
+        "task-card bg-white rounded-lg border border-gray-100 border-l-[3px] cursor-grab active:cursor-grabbing",
+        // Mobile: larger touch targets, more padding
+        isMobile ? "p-4 min-h-[100px]" : "p-3",
+        isDragging && "opacity-50 shadow-lg"
+      )}
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       role="button"
@@ -66,18 +72,27 @@ export function TaskCard({
       aria-label={`Task: ${title}`}
     >
       {/* Title */}
-      <h4 className="text-[13px] font-semibold text-brand-charcoal leading-snug line-clamp-2">
+      <h4 className={cn(
+        "font-semibold text-brand-charcoal leading-snug line-clamp-2",
+        isMobile ? "text-base" : "text-[13px]"
+      )}>
         {title}
       </h4>
 
       {/* Description */}
-      <p className="text-[11px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">
+      <p className={cn(
+        "text-gray-400 mt-1 line-clamp-2 leading-relaxed",
+        isMobile ? "text-sm" : "text-[11px]"
+      )}>
         {description}
       </p>
 
       {/* Blocked reason */}
       {blockedReason && (
-        <div className="mt-2 text-[10px] text-red-500 bg-red-50 rounded px-2 py-1 line-clamp-1">
+        <div className={cn(
+          "mt-2 text-red-500 bg-red-50 rounded px-2 py-1 line-clamp-1",
+          isMobile ? "text-xs" : "text-[10px]"
+        )}>
           ⚠️ {blockedReason}
         </div>
       )}
@@ -86,18 +101,26 @@ export function TaskCard({
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="default" className="!text-[9px] !px-1.5 !py-0">
+            <Badge key={tag} variant="default" className={cn(
+              isMobile ? "!text-[10px] !px-2 !py-0.5" : "!text-[9px] !px-1.5 !py-0"
+            )}>
               {tag}
             </Badge>
           ))}
           {tags.length > 3 && (
-            <span className="text-[9px] text-gray-400">+{tags.length - 3}</span>
+            <span className={cn(
+              "text-gray-400",
+              isMobile ? "text-[10px]" : "text-[9px]"
+            )}>+{tags.length - 3}</span>
           )}
         </div>
       )}
 
       {/* Footer: Assignees + Time — P1-014: relative age */}
-      <div className="flex items-center justify-between mt-2.5">
+      <div className={cn(
+        "flex items-center justify-between",
+        isMobile ? "mt-3" : "mt-2.5"
+      )}>
         <div className="flex -space-x-1.5">
           {assignees.map((a) =>
             a ? (
@@ -105,13 +128,19 @@ export function TaskCard({
                 key={a._id}
                 name={a.name}
                 color={a.avatarColor}
-                size="sm"
+                size={isMobile ? "md" : "sm"}
                 className="ring-2 ring-white"
               />
             ) : null
           )}
         </div>
-        <span className="text-[10px] text-gray-300" title={new Date(creationTime).toLocaleString()}>
+        <span 
+          className={cn(
+            "text-gray-300",
+            isMobile ? "text-xs" : "text-[10px]"
+          )} 
+          title={new Date(creationTime).toLocaleString()}
+        >
           {timeAgo(creationTime)}
         </span>
       </div>

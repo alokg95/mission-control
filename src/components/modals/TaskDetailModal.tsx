@@ -120,7 +120,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/30 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -128,23 +128,28 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-white md:rounded-2xl rounded-t-2xl shadow-2xl w-full md:max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] overflow-hidden flex flex-col modal-slide-up md:animate-none safe-area-bottom"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile drag handle */}
+        <div className="md:hidden flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        </div>
+
         {/* Header */}
-        <div className="p-5 border-b border-gray-100">
+        <div className="p-4 md:p-5 border-b border-gray-100">
           <div className="flex items-start justify-between">
-            <div className="flex-1">
+            <div className="flex-1 pr-2">
               {isEditing ? (
                 <input
-                  className="w-full text-lg font-bold text-brand-charcoal bg-gray-50 rounded-lg px-3 py-1.5 border border-gray-200 focus:outline-none focus:border-brand-teal"
+                  className="w-full text-base md:text-lg font-bold text-brand-charcoal bg-gray-50 rounded-lg px-3 py-2 md:py-1.5 border border-gray-200 focus:outline-none focus:border-brand-teal"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   autoFocus
                 />
               ) : (
                 <h2
-                  className="text-lg font-bold text-brand-charcoal cursor-pointer hover:text-brand-teal transition-colors"
+                  className="text-base md:text-lg font-bold text-brand-charcoal cursor-pointer hover:text-brand-teal transition-colors leading-tight"
                   onClick={() => setIsEditing(true)}
                 >
                   {task.title}
@@ -152,11 +157,11 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
               )}
 
               {/* Status + Priority row — P0-003: only valid next statuses */}
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-3 md:mt-2 flex-wrap">
                 <select
                   value={task.status}
                   onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
-                  className="text-[11px] font-semibold uppercase tracking-wider bg-brand-teal-light text-brand-teal-dark px-2 py-1 rounded-lg border-none cursor-pointer focus:outline-none"
+                  className="text-xs md:text-[11px] font-semibold uppercase tracking-wider bg-brand-teal-light text-brand-teal-dark px-3 py-2 md:px-2 md:py-1 rounded-lg border-none cursor-pointer focus:outline-none min-h-[44px] md:min-h-0"
                 >
                   <option value={task.status}>
                     {COLUMN_LABELS[task.status]}
@@ -171,7 +176,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                 <select
                   value={task.priority}
                   onChange={(e) => handlePriorityChange(e.target.value as Priority)}
-                  className="text-[11px] font-semibold px-2 py-1 rounded-lg border-none cursor-pointer focus:outline-none"
+                  className="text-xs md:text-[11px] font-semibold px-3 py-2 md:px-2 md:py-1 rounded-lg border-none cursor-pointer focus:outline-none min-h-[44px] md:min-h-0"
                   style={{
                     backgroundColor: `${PRIORITY_COLORS[task.priority]}20`,
                     color: PRIORITY_COLORS[task.priority],
@@ -185,9 +190,9 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                 </select>
 
                 {/* Tags */}
-                <div className="flex gap-1 ml-2">
+                <div className="flex gap-1 flex-wrap">
                   {task.tags.map((tag) => (
-                    <Badge key={tag} variant="default" className="!text-[9px]">
+                    <Badge key={tag} variant="default" className="!text-[10px] md:!text-[9px]">
                       {tag}
                     </Badge>
                   ))}
@@ -197,7 +202,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
 
             <button
               onClick={onClose}
-              className="ml-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="ml-2 w-10 h-10 md:w-8 md:h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
               aria-label="Close"
             >
               ✕
@@ -206,10 +211,10 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-5 overscroll-contain">
           {/* Description */}
           <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+            <h3 className="text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2 md:mb-1.5">
               Description
             </h3>
             {isEditing ? (
@@ -222,13 +227,13 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={handleSaveEdit}
-                    className="px-3 py-1 bg-brand-teal text-white text-xs font-medium rounded-lg hover:bg-brand-teal-dark transition-colors"
+                    className="px-4 py-2 md:px-3 md:py-1 bg-brand-teal text-white text-sm md:text-xs font-medium rounded-lg hover:bg-brand-teal-dark active:bg-brand-teal-dark transition-colors min-h-[44px] md:min-h-0"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    className="px-4 py-2 md:px-3 md:py-1 bg-gray-100 text-gray-500 text-sm md:text-xs font-medium rounded-lg hover:bg-gray-200 active:bg-gray-200 transition-colors min-h-[44px] md:min-h-0"
                   >
                     Cancel
                   </button>
@@ -236,7 +241,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
               </div>
             ) : (
               <p
-                className="text-sm text-gray-600 leading-relaxed cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+                className="text-sm text-gray-600 leading-relaxed cursor-pointer hover:bg-gray-50 active:bg-gray-50 rounded-lg p-3 md:p-2 -m-2 transition-colors"
                 onClick={() => setIsEditing(true)}
               >
                 {task.description}
@@ -246,17 +251,17 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
 
           {/* Blocked Reason */}
           {task.blockedReason && (
-            <div className="bg-red-50 rounded-lg p-3 border border-red-100">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-red-400 mb-1">
+            <div className="bg-red-50 rounded-lg p-4 md:p-3 border border-red-100">
+              <h3 className="text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-red-400 mb-1">
                 ⚠️ Blocked
               </h3>
-              <p className="text-xs text-red-600">{task.blockedReason}</p>
+              <p className="text-sm md:text-xs text-red-600">{task.blockedReason}</p>
             </div>
           )}
 
           {/* Assignees */}
           <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+            <h3 className="text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-3 md:mb-2">
               Assignees
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -266,7 +271,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                   <button
                     key={agent._id}
                     onClick={() => handleAssign(agent._id)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all ${
+                    className={`flex items-center gap-2 md:gap-1.5 px-3 py-2 md:px-2.5 md:py-1.5 rounded-lg text-sm md:text-xs transition-all min-h-[44px] md:min-h-0 ${
                       isAssigned
                         ? "bg-brand-teal-light border border-brand-teal"
                         : "bg-gray-50 border border-gray-200 opacity-50 hover:opacity-100"
@@ -281,7 +286,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
           </div>
 
           {/* Metadata */}
-          <div className="flex gap-6 text-[10px] text-gray-400">
+          <div className="flex gap-4 md:gap-6 text-xs md:text-[10px] text-gray-400 flex-wrap">
             <span>Created by <strong>{task.createdBy}</strong></span>
             <span>Created {timeAgo(task._creationTime)}</span>
             {task.completedAt && (
@@ -291,14 +296,14 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
 
           {/* Comment Thread — P0-007: @mention highlighting */}
           <div>
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+            <h3 className="text-[11px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-3 md:mb-2">
               Activity Thread
             </h3>
             <div className="space-y-3">
               {messages.map((msg) => {
                 const agent = agents.find((a) => a._id === msg.fromAgentId);
                 return (
-                  <div key={msg._id} className="flex items-start gap-2.5">
+                  <div key={msg._id} className="flex items-start gap-3 md:gap-2.5">
                     {agent ? (
                       <Avatar
                         name={agent.name}
@@ -308,16 +313,16 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
                     )}
-                    <div className="flex-1 bg-gray-50 rounded-lg p-2.5">
+                    <div className="flex-1 bg-gray-50 rounded-lg p-3 md:p-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-brand-charcoal">
+                        <span className="text-sm md:text-xs font-semibold text-brand-charcoal">
                           {agent?.name ?? "Unknown"}
                         </span>
-                        <span className="text-[9px] text-gray-300" title={absoluteTime(msg._creationTime)}>
+                        <span className="text-[10px] md:text-[9px] text-gray-300" title={absoluteTime(msg._creationTime)}>
                           {timeAgo(msg._creationTime)}
                         </span>
                       </div>
-                      <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                      <p className="text-sm md:text-[11px] text-gray-600 mt-1 leading-relaxed">
                         {renderWithMentions(msg.content, agents)}
                       </p>
                     </div>
@@ -325,7 +330,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
                 );
               })}
               {messages.length === 0 && (
-                <p className="text-xs text-gray-300 text-center py-4">
+                <p className="text-sm md:text-xs text-gray-300 text-center py-4">
                   No comments yet
                 </p>
               )}
@@ -334,7 +339,7 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
         </div>
 
         {/* Comment Input */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 safe-area-bottom">
           <div className="flex gap-2">
             <input
               type="text"
@@ -342,12 +347,12 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleComment()}
               placeholder="Add a comment... (use @Name to mention)"
-              className="flex-1 text-sm bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 focus:outline-none focus:border-brand-teal placeholder:text-gray-300"
+              className="flex-1 text-base md:text-sm bg-gray-50 rounded-lg px-4 py-3 md:px-3 md:py-2 border border-gray-200 focus:outline-none focus:border-brand-teal placeholder:text-gray-300"
             />
             <button
               onClick={handleComment}
               disabled={!newComment.trim()}
-              className="px-4 py-2 bg-brand-teal text-white text-xs font-medium rounded-lg hover:bg-brand-teal-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-5 py-3 md:px-4 md:py-2 bg-brand-teal text-white text-sm md:text-xs font-medium rounded-lg hover:bg-brand-teal-dark active:bg-brand-teal-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] md:min-h-0"
             >
               Send
             </button>

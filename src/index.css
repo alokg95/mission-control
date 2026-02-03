@@ -24,11 +24,25 @@ body {
   color: #333333;
   margin: 0;
   min-height: 100vh;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior: none;
+  /* Ensure minimum readable font size on mobile */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Safe area insets for notched devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -41,13 +55,37 @@ body {
   background: #94A3B8;
 }
 
+/* Hide scrollbar on mobile for horizontal scroll */
+@media (max-width: 767px) {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 /* Smooth transitions for card moves */
 .task-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Prevent text selection during drag on mobile */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Smooth touch feedback */
+  -webkit-tap-highlight-color: transparent;
 }
 .task-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(42, 191, 191, 0.15);
+}
+
+/* Active state for touch devices */
+@media (hover: none) {
+  .task-card:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(42, 191, 191, 0.15);
+  }
 }
 
 /* Feed entry animation */
@@ -97,6 +135,19 @@ body {
   animation: slideInRight 0.25s ease-out;
 }
 
+/* Modal slide up from bottom (mobile) */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.modal-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
 /* @mention highlight */
 .mention-highlight {
   color: #2ABFBF;
@@ -104,4 +155,118 @@ body {
   background: rgba(42, 191, 191, 0.1);
   border-radius: 3px;
   padding: 0 2px;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 767px) {
+  button, 
+  [role="button"],
+  a {
+    /* Ensure minimum tap target of 44x44px */
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Exception for inline elements that don't need full tap target */
+  .inline-button {
+    min-height: auto;
+    min-width: auto;
+  }
+}
+
+/* Smooth scroll for horizontal containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Snap scroll for columns */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+.snap-start {
+  scroll-snap-align: start;
+}
+.snap-always {
+  scroll-snap-stop: always;
+}
+
+/* Overscroll behavior for pull-to-refresh feel */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Mobile-optimized spacing */
+@media (max-width: 767px) {
+  /* Larger touch-friendly padding */
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  /* Full-width cards */
+  .mobile-full-width {
+    width: 100%;
+  }
+}
+
+/* Notification badge animation */
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+.notification-badge {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* Bottom navigation safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav.safe-area-bottom {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+    height: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Prevent iOS zoom on input focus */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid #2ABFBF;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

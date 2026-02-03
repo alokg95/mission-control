@@ -46,52 +46,56 @@ export function TopBar({ onNewTask }: TopBarProps) {
   }, []);
 
   return (
-    <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-6 shrink-0">
+    <header className="h-14 md:h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-3 md:px-6 shrink-0 safe-area-top">
       {/* Left: Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-brand-teal rounded-lg flex items-center justify-center">
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="w-8 h-8 bg-brand-teal rounded-lg flex items-center justify-center shrink-0">
           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
           </svg>
         </div>
-        <h1 className="text-sm font-bold tracking-[0.2em] uppercase text-brand-charcoal">
-          Mission Control
-        </h1>
-        <span className="px-2 py-0.5 bg-brand-teal-light text-brand-teal-dark text-[10px] font-semibold rounded-full uppercase tracking-wider">
+        <div className="hidden sm:block">
+          <h1 className="text-sm font-bold tracking-[0.2em] uppercase text-brand-charcoal">
+            Mission Control
+          </h1>
+        </div>
+        <span className="hidden md:inline-flex px-2 py-0.5 bg-brand-teal-light text-brand-teal-dark text-[10px] font-semibold rounded-full uppercase tracking-wider">
           AutoReel
         </span>
       </div>
 
-      {/* Center: Stats */}
-      <div className="flex items-center gap-8">
+      {/* Center: Stats - Condensed on mobile */}
+      <div className="flex items-center gap-3 md:gap-8">
         <div className="text-center">
-          <div className="text-2xl font-bold text-brand-charcoal leading-none">{activeCount}</div>
-          <div className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
-            Agents Active
+          <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{activeCount}</div>
+          <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+            <span className="hidden sm:inline">Agents </span>Active
           </div>
         </div>
-        <div className="w-px h-8 bg-gray-200" />
+        <div className="w-px h-6 md:h-8 bg-gray-200" />
         <div className="text-center">
-          <div className="text-2xl font-bold text-brand-charcoal leading-none">{taskCount}</div>
-          <div className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
-            Tasks in Queue
+          <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{taskCount}</div>
+          <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+            <span className="hidden sm:inline">Tasks in </span>Queue
           </div>
         </div>
       </div>
 
       {/* Right: Actions + Clock + Status */}
-      <div className="flex items-center gap-4">
-        {/* New Task button */}
+      <div className="flex items-center gap-2 md:gap-4">
+        {/* New Task button - icon only on mobile */}
         <button
           onClick={onNewTask}
-          className="px-3 py-1.5 text-xs font-medium text-white bg-brand-teal rounded-lg hover:bg-brand-teal-dark transition-colors"
+          className="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 px-3 py-1.5 text-xs font-medium text-white bg-brand-teal rounded-lg hover:bg-brand-teal-dark active:bg-brand-teal-dark transition-colors flex items-center justify-center"
           aria-label="New Task"
         >
-          + New Task
+          <span className="md:hidden text-lg">+</span>
+          <span className="hidden md:inline">+ New Task</span>
         </button>
 
+        {/* Docs button - hidden on mobile */}
         <button
-          className="px-3 py-1.5 text-xs font-medium text-brand-teal-dark bg-brand-teal-light rounded-lg hover:bg-brand-teal/20 transition-colors"
+          className="hidden md:flex px-3 py-1.5 text-xs font-medium text-brand-teal-dark bg-brand-teal-light rounded-lg hover:bg-brand-teal/20 transition-colors"
           aria-label="Documents"
         >
           📄 Docs
@@ -101,13 +105,13 @@ export function TopBar({ onNewTask }: TopBarProps) {
         <div className="relative">
           <button
             onClick={toggleNotifications}
-            className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            className="relative min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-gray-100 active:bg-gray-100 transition-colors"
             aria-label="Notifications"
           >
             🔔
             {/* Unread count badge */}
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notification-badge">
+              <span className="absolute top-1 right-1 md:-top-0.5 md:-right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notification-badge">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
@@ -117,8 +121,8 @@ export function TopBar({ onNewTask }: TopBarProps) {
           )}
         </div>
 
-        {/* P1-004: Clock with large monospace time + date below */}
-        <div className="text-right">
+        {/* P1-004: Clock - hidden on mobile */}
+        <div className="hidden md:block text-right">
           <div className="clock-display text-lg font-bold text-brand-charcoal leading-none">
             {clockTime}
           </div>
@@ -127,9 +131,9 @@ export function TopBar({ onNewTask }: TopBarProps) {
           </div>
         </div>
 
-        {/* P0-009: Connection status */}
+        {/* P0-009: Connection status - condensed on mobile */}
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full ${
+          className={`inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full ${
             isOnline
               ? "bg-emerald-50 text-emerald-600"
               : "bg-red-50 text-red-600"
@@ -140,7 +144,7 @@ export function TopBar({ onNewTask }: TopBarProps) {
               isOnline ? "bg-emerald-500 animate-pulse" : "bg-red-500"
             }`}
           />
-          {isOnline ? (USE_CONVEX ? "Live" : "Local") : "Offline"}
+          <span className="hidden sm:inline">{isOnline ? (USE_CONVEX ? "Live" : "Local") : "Offline"}</span>
         </span>
       </div>
     </header>

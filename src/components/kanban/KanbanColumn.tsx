@@ -21,6 +21,7 @@ interface KanbanColumnProps {
   tasks: TaskItem[];
   onTaskClick: (taskId: string) => void;
   onNewTask?: () => void;
+  isMobile?: boolean;
 }
 
 const columnAccentColors: Record<TaskStatus, string> = {
@@ -32,22 +33,26 @@ const columnAccentColors: Record<TaskStatus, string> = {
   blocked: "#E74C3C",
 };
 
-export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanColumnProps) {
+export function KanbanColumn({ status, tasks, onTaskClick, onNewTask, isMobile }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const accent = columnAccentColors[status];
 
   return (
     <div
       className={cn(
-        // P1-005: wider columns
-        "flex flex-col min-w-[290px] w-[290px] shrink-0 rounded-xl transition-colors",
+        // Desktop: fixed width columns, Mobile: full width
+        "flex flex-col shrink-0 rounded-xl transition-colors h-full",
+        isMobile ? "w-full" : "min-w-[290px] w-[290px]",
         isOver && "bg-brand-teal-light/30",
         // P1-015: Blocked column red accent
         status === "blocked" && "kanban-column-blocked"
       )}
     >
-      {/* Column Header — P1-011: count in header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 mb-2">
+      {/* Column Header — P1-011: count in header - Hidden on mobile since we have tabs */}
+      <div className={cn(
+        "items-center gap-2 px-3 py-2.5 mb-2",
+        isMobile ? "hidden" : "flex"
+      )}>
         <span
           className="w-2 h-2 rounded-full shrink-0"
           style={{ backgroundColor: accent }}
@@ -70,10 +75,24 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
         )}
       </div>
 
+      {/* Mobile: Floating add button for inbox */}
+      {isMobile && status === "inbox" && onNewTask && (
+        <button
+          onClick={onNewTask}
+          className="fixed bottom-20 right-4 w-14 h-14 flex items-center justify-center rounded-full bg-brand-teal text-white text-2xl shadow-lg hover:bg-brand-teal-dark active:bg-brand-teal-dark transition-colors z-30"
+          aria-label="Create new task"
+        >
+          +
+        </button>
+      )}
+
       {/* Cards */}
       <div
         ref={setNodeRef}
-        className="flex-1 overflow-y-auto space-y-2 px-1 pb-4 min-h-[100px]"
+        className={cn(
+          "flex-1 overflow-y-auto space-y-2 md:space-y-2 px-1 pb-4 min-h-[100px]",
+          isMobile && "space-y-3 px-0" // More spacing on mobile
+        )}
       >
         <SortableContext
           items={tasks.map((t) => t._id)}
@@ -82,10 +101,10 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
           {tasks.length === 0 ? (
             // P1-016: Empty column state
             <div className="flex flex-col items-center justify-center py-12 text-gray-300">
-              <div className="text-2xl mb-2">
+              <div className="text-3xl md:text-2xl mb-2">
                 {status === "inbox" ? "📥" : status === "done" ? "✅" : status === "blocked" ? "🚧" : "📋"}
               </div>
-              <p className="text-[11px]">No tasks</p>
+              <p className="text-sm md:text-[11px]">No tasks</p>
             </div>
           ) : (
             tasks.map((task) => (
@@ -100,6 +119,7 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask }: KanbanCo
                 creationTime={task._creationTime}
                 blockedReason={task.blockedReason}
                 onClick={() => onTaskClick(task._id)}
+                isMobile={isMobile}
               />
             ))
           )}

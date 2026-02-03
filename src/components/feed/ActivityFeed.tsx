@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useActivities, useAgents } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import { timeAgo, absoluteTime } from "../../lib/utils";
@@ -25,6 +25,8 @@ export function ActivityFeed() {
   const [agentFilter, setAgentFilter] = useState<string | null>(null);
   // P1-008: Pagination
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Pull-to-refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   let filtered = filter === "all"
     ? activities
@@ -37,8 +39,17 @@ export function ActivityFeed() {
   const displayed = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
 
+  // Simulate pull-to-refresh
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+      setVisibleCount(PAGE_SIZE);
+    }, 500);
+  }, []);
+
   return (
-    <aside className="w-72 shrink-0 bg-white/50 backdrop-blur-sm border-l border-brand-teal-light/50 flex flex-col">
+    <aside className="w-full md:w-72 shrink-0 bg-white/50 backdrop-blur-sm md:border-l border-brand-teal-light/50 flex flex-col h-full">
       {/* P1-003: Section header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2.5">
@@ -46,80 +57,103 @@ export function ActivityFeed() {
           <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-brand-charcoal">
             Live Feed
           </h2>
+          {/* Mobile refresh button */}
+          <button
+            onClick={handleRefresh}
+            className={`ml-auto md:hidden p-2 rounded-lg hover:bg-gray-100 active:bg-gray-100 transition-colors ${
+              isRefreshing ? "animate-spin" : ""
+            }`}
+            aria-label="Refresh"
+          >
+            🔄
+          </button>
         </div>
-        {/* Type Filters */}
-        <div className="flex flex-wrap gap-1 mb-2">
-          {ACTIVITY_FILTERS.map(({ key, label }) => (
+        
+        {/* Type Filters - scrollable on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 mb-2">
+          <div className="flex gap-1 min-w-max md:flex-wrap md:min-w-0">
+            {ACTIVITY_FILTERS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors whitespace-nowrap min-h-[32px] md:min-h-0 ${
+                  filter === key
+                    ? "bg-brand-teal text-white"
+                    : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* P1-002: Agent filter chips - scrollable on mobile */}
+        <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+          <div className="flex gap-1 min-w-max md:flex-wrap md:min-w-0">
             <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
-                filter === key
-                  ? "bg-brand-teal text-white"
+              onClick={() => setAgentFilter(null)}
+              className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors whitespace-nowrap min-h-[32px] md:min-h-0 ${
+                !agentFilter
+                  ? "bg-brand-charcoal text-white"
                   : "bg-gray-100 text-gray-400 hover:bg-gray-200"
               }`}
             >
-              {label}
+              All Agents
             </button>
-          ))}
-        </div>
-        {/* P1-002: Agent filter chips */}
-        <div className="flex flex-wrap gap-1">
-          <button
-            onClick={() => setAgentFilter(null)}
-            className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
-              !agentFilter
-                ? "bg-brand-charcoal text-white"
-                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-            }`}
-          >
-            All Agents
-          </button>
-          {agents.map((agent) => {
-            const count = activities.filter((a) => a.agentId === agent._id).length;
-            return (
-              <button
-                key={agent._id}
-                onClick={() => setAgentFilter(agentFilter === agent._id ? null : agent._id)}
-                className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
-                  agentFilter === agent._id
-                    ? "text-white"
-                    : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                }`}
-                style={
-                  agentFilter === agent._id
-                    ? { backgroundColor: agent.avatarColor }
-                    : undefined
-                }
-              >
-                {agent.name} ({count})
-              </button>
-            );
-          })}
+            {agents.map((agent) => {
+              const count = activities.filter((a) => a.agentId === agent._id).length;
+              return (
+                <button
+                  key={agent._id}
+                  onClick={() => setAgentFilter(agentFilter === agent._id ? null : agent._id)}
+                  className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors whitespace-nowrap min-h-[32px] md:min-h-0 ${
+                    agentFilter === agent._id
+                      ? "text-white"
+                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  }`}
+                  style={
+                    agentFilter === agent._id
+                      ? { backgroundColor: agent.avatarColor }
+                      : undefined
+                  }
+                >
+                  {agent.name} ({count})
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Feed Items */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-1">
+      {/* Feed Items - optimized for thumb scrolling */}
+      <div className="flex-1 overflow-y-auto p-3 md:p-3 space-y-2 md:space-y-1 overscroll-contain">
+        {isRefreshing && (
+          <div className="flex items-center justify-center py-4 text-gray-400 text-sm">
+            Refreshing...
+          </div>
+        )}
+        
         {displayed.map((activity) => {
           const agent = agents.find((a) => a._id === activity.agentId);
           return (
             <div
               key={activity._id}
-              className="feed-entry p-2.5 rounded-lg hover:bg-white/80 transition-colors"
+              className="feed-entry p-3 md:p-2.5 rounded-lg hover:bg-white/80 active:bg-white/80 transition-colors"
             >
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-3 md:gap-2.5">
                 {agent ? (
                   <Avatar
                     name={agent.name}
                     color={agent.avatarColor}
-                    size="sm"
+                    size="md"
+                    className="md:w-6 md:h-6"
                   />
                 ) : (
-                  <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0" />
+                  <div className="w-8 h-8 md:w-6 md:h-6 rounded-full bg-gray-200 shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] text-brand-charcoal leading-relaxed">
+                  <p className="text-sm md:text-[11px] text-brand-charcoal leading-relaxed">
                     <span className="font-semibold">{agent?.name ?? "Unknown"}</span>{" "}
                     <span className="text-gray-400">
                       {typeIcons[activity.type as ActivityType]}{" "}
@@ -128,7 +162,7 @@ export function ActivityFeed() {
                   </p>
                   {/* P1-009: Relative timestamp with hover for absolute */}
                   <span
-                    className="text-[9px] text-gray-300 mt-0.5 block cursor-default"
+                    className="text-[10px] md:text-[9px] text-gray-300 mt-1 md:mt-0.5 block cursor-default"
                     title={absoluteTime(activity._creationTime)}
                   >
                     {timeAgo(activity._creationTime)}
@@ -138,16 +172,18 @@ export function ActivityFeed() {
             </div>
           );
         })}
-        {displayed.length === 0 && (
-          <div className="text-center text-gray-300 text-xs py-8">
+        
+        {displayed.length === 0 && !isRefreshing && (
+          <div className="text-center text-gray-300 text-sm md:text-xs py-8">
             No activities yet
           </div>
         )}
+        
         {/* P1-008: Load more */}
         {hasMore && (
           <button
             onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
-            className="w-full py-2 text-[10px] text-brand-teal font-semibold hover:bg-brand-teal-light/30 rounded-lg transition-colors"
+            className="w-full py-3 md:py-2 text-sm md:text-[10px] text-brand-teal font-semibold hover:bg-brand-teal-light/30 active:bg-brand-teal-light/30 rounded-lg transition-colors"
           >
             Load more ({filtered.length - visibleCount} remaining)
           </button>

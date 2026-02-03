@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -11,7 +12,7 @@ import {
 import { KanbanColumn } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import { useTasks, useAgents, useMutations } from "../../lib/store-context";
-import { COLUMN_ORDER } from "../../types";
+import { COLUMN_ORDER, COLUMN_LABELS } from "../../types";
 import type { TaskStatus, Priority } from "../../types";
 import { isValidTransition, getTransitionError } from "../../lib/task-state-machine";
 import { useToast } from "../../lib/toast";
@@ -33,9 +34,14 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
   const [filterAgent, setFilterAgent] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<Priority | null>(null);
   const [filterTag, setFilterTag] = useState<string | null>(null);
+  // Mobile: Current column index for swipe navigation
+  const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Use both pointer and touch sensors for mobile
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
 
   // P1-001: Apply filters
@@ -120,8 +126,30 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
     mutations.updateTaskStatus(taskId, targetStatus);
   }
 
+  // Mobile column navigation
+  const handleMobileColumnChange = (index: number) => {
+    setMobileColumnIndex(index);
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const columnWidth = container.offsetWidth;
+      container.scrollTo({ left: columnWidth * index, behavior: 'smooth' });
+    }
+  };
+
+  // Handle scroll snap end to update index
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const columnWidth = container.offsetWidth;
+      const newIndex = Math.round(container.scrollLeft / columnWidth);
+      if (newIndex !== mobileColumnIndex && newIndex >= 0 && newIndex < COLUMN_ORDER.length) {
+        setMobileColumnIndex(newIndex);
+      }
+    }
+  };
+
   return (
-    <div className="flex-1 overflow-x-auto">
+    <div className="flex-1 overflow-hidden flex flex-col w-full">
       {/* P1-003: Section header */}
       <div className="px-4 pt-3 pb-1 flex items-center gap-2">
         <span className="w-2.5 h-2.5 rounded-full bg-brand-teal shrink-0" />
@@ -129,70 +157,99 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
           Mission Queue
         </h2>
       </div>
-      {/* P1-001: Filter bar */}
-      <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
-        {/* Agent filter */}
-        {agents.map((agent) => (
-          <button
-            key={agent._id}
-            onClick={() => setFilterAgent(filterAgent === agent._id ? null : agent._id)}
-            className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
-              filterAgent === agent._id
-                ? "text-white"
-                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-            }`}
-            style={filterAgent === agent._id ? { backgroundColor: agent.avatarColor } : undefined}
-          >
-            <Avatar name={agent.name} color={agent.avatarColor} size="sm" />
-            {agent.name}
-          </button>
-        ))}
-        <div className="w-px h-4 bg-gray-200" />
-        {/* Priority filter */}
-        {(["p0", "p1", "p2", "p3"] as Priority[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setFilterPriority(filterPriority === p ? null : p)}
-            className={`px-2 py-0.5 text-[10px] font-semibold rounded-full transition-colors ${
-              filterPriority === p
-                ? "bg-brand-charcoal text-white"
-                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-            }`}
-          >
-            {p.toUpperCase()}
-          </button>
-        ))}
-        <div className="w-px h-4 bg-gray-200" />
-        {/* Tag filter (show top 5) */}
-        {allTags.slice(0, 5).map((tag) => (
-          <button
-            key={tag}
-            onClick={() => setFilterTag(filterTag === tag ? null : tag)}
-            className={`px-2 py-0.5 text-[10px] font-medium rounded-full transition-colors ${
-              filterTag === tag
-                ? "bg-brand-teal text-white"
-                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-            }`}
-          >
-            {tag}
-          </button>
-        ))}
-        {/* Clear filters */}
-        {(filterAgent || filterPriority || filterTag) && (
-          <button
-            onClick={() => { setFilterAgent(null); setFilterPriority(null); setFilterTag(null); }}
-            className="px-2 py-0.5 text-[10px] font-medium text-red-400 hover:text-red-600 transition-colors"
-          >
-            ✕ Clear
-          </button>
-        )}
+      
+      {/* P1-001: Filter bar - scrollable on mobile */}
+      <div className="px-4 pb-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-4">
+        <div className="flex items-center gap-2 flex-nowrap md:flex-wrap min-w-max md:min-w-0">
+          {/* Agent filter */}
+          {agents.map((agent) => (
+            <button
+              key={agent._id}
+              onClick={() => setFilterAgent(filterAgent === agent._id ? null : agent._id)}
+              className={`flex items-center gap-1 px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[32px] md:min-h-0 ${
+                filterAgent === agent._id
+                  ? "text-white"
+                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+              }`}
+              style={filterAgent === agent._id ? { backgroundColor: agent.avatarColor } : undefined}
+            >
+              <Avatar name={agent.name} color={agent.avatarColor} size="sm" />
+              {agent.name}
+            </button>
+          ))}
+          <div className="w-px h-4 bg-gray-200 shrink-0" />
+          {/* Priority filter */}
+          {(["p0", "p1", "p2", "p3"] as Priority[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setFilterPriority(filterPriority === p ? null : p)}
+              className={`px-2 py-1 md:py-0.5 text-[10px] font-semibold rounded-full transition-colors min-h-[32px] md:min-h-0 ${
+                filterPriority === p
+                  ? "bg-brand-charcoal text-white"
+                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+              }`}
+            >
+              {p.toUpperCase()}
+            </button>
+          ))}
+          <div className="w-px h-4 bg-gray-200 shrink-0" />
+          {/* Tag filter (show top 5) */}
+          {allTags.slice(0, 5).map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setFilterTag(filterTag === tag ? null : tag)}
+              className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[32px] md:min-h-0 whitespace-nowrap ${
+                filterTag === tag
+                  ? "bg-brand-teal text-white"
+                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+          {/* Clear filters */}
+          {(filterAgent || filterPriority || filterTag) && (
+            <button
+              onClick={() => { setFilterAgent(null); setFilterPriority(null); setFilterTag(null); }}
+              className="px-2 py-1 md:py-0.5 text-[10px] font-medium text-red-400 hover:text-red-600 transition-colors min-h-[32px] md:min-h-0"
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Mobile: Column tabs */}
+      <div className="md:hidden flex items-center gap-1 px-4 pb-2 overflow-x-auto">
+        {COLUMN_ORDER.map((status, index) => (
+          <button
+            key={status}
+            onClick={() => handleMobileColumnChange(index)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors whitespace-nowrap ${
+              mobileColumnIndex === index
+                ? "bg-brand-teal text-white"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            {COLUMN_LABELS[status]}
+            <span className={`px-1.5 py-0.5 text-[9px] rounded ${
+              mobileColumnIndex === index
+                ? "bg-white/20 text-white"
+                : "bg-gray-200 text-gray-400"
+            }`}>
+              {tasksByStatus[status].length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 px-4 pb-4 h-[calc(100%-2rem)] min-w-max">
+        {/* Desktop: Horizontal scroll all columns */}
+        <div className="hidden md:flex gap-3 px-4 pb-4 flex-1 overflow-x-auto min-w-max">
           {COLUMN_ORDER.map((status) => (
             <KanbanColumn
               key={status}
@@ -202,6 +259,31 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
               onNewTask={status === "inbox" ? onNewTask : undefined}
             />
           ))}
+        </div>
+
+        {/* Mobile: Single column with swipe navigation */}
+        <div
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="md:hidden flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth"
+        >
+          <div className="flex h-full" style={{ width: `${COLUMN_ORDER.length * 100}%` }}>
+            {COLUMN_ORDER.map((status) => (
+              <div
+                key={status}
+                className="w-full h-full px-4 pb-4 snap-start snap-always"
+                style={{ width: `${100 / COLUMN_ORDER.length}%` }}
+              >
+                <KanbanColumn
+                  status={status}
+                  tasks={tasksByStatus[status]}
+                  onTaskClick={onTaskClick}
+                  onNewTask={status === "inbox" ? onNewTask : undefined}
+                  isMobile
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <DragOverlay>
