@@ -1,50 +1,63 @@
 /* eslint-disable */
-// Stub generated API types for build without `npx convex dev`
-// Run `npx convex dev` to generate real types
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
 
-import type { FunctionReference } from "convex/server";
+import type * as activities from "../activities.js";
+import type * as agents from "../agents.js";
+import type * as auth from "../auth.js";
+import type * as documents from "../documents.js";
+import type * as messages from "../messages.js";
+import type * as notifications from "../notifications.js";
+import type * as seed from "../seed.js";
+import type * as tasks from "../tasks.js";
 
-type AnyQuery = FunctionReference<"query">;
-type AnyMutation = FunctionReference<"mutation">;
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 
-declare const api: {
-  agents: {
-    list: AnyQuery;
-    updateStatus: AnyMutation;
-  };
-  tasks: {
-    list: AnyQuery;
-    byStatus: AnyQuery;
-    get: AnyQuery;
-    create: AnyMutation;
-    updateStatus: AnyMutation;
-    update: AnyMutation;
-    remove: AnyMutation;
-  };
-  messages: {
-    byTask: AnyQuery;
-    send: AnyMutation;
-  };
-  activities: {
-    recent: AnyQuery;
-    log: AnyMutation;
-  };
-  notifications: {
-    undelivered: AnyQuery;
-    create: AnyMutation;
-    markDelivered: AnyMutation;
-  };
-  documents: {
-    list: AnyQuery;
-    get: AnyQuery;
-    byTask: AnyQuery;
-    create: AnyMutation;
-    update: AnyMutation;
-    remove: AnyMutation;
-  };
-  seed: {
-    seed: AnyMutation;
-  };
-};
+declare const fullApi: ApiFromModules<{
+  activities: typeof activities;
+  agents: typeof agents;
+  auth: typeof auth;
+  documents: typeof documents;
+  messages: typeof messages;
+  notifications: typeof notifications;
+  seed: typeof seed;
+  tasks: typeof tasks;
+}>;
 
-export { api };
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {};
