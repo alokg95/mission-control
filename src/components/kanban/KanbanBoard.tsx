@@ -276,7 +276,11 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="md:hidden flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth"
+          className="md:hidden flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth hide-scrollbar"
+          style={{
+            minHeight: '300px',
+            height: 'calc(100dvh - 200px)',
+          }}
         >
           <div className="flex h-full" style={{ width: `${COLUMN_ORDER.length * 100}%` }}>
             {COLUMN_ORDER.map((status) => (
