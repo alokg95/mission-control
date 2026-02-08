@@ -17,6 +17,7 @@ import type { TaskStatus, Priority } from "../../types";
 import { isValidTransition, getTransitionError } from "../../lib/task-state-machine";
 import { useToast } from "../../lib/toast";
 import { Avatar } from "../ui/Avatar";
+import { ScrollableRow } from "../ui/ScrollableRow";
 
 interface KanbanBoardProps {
   onTaskClick: (taskId: string) => void;
@@ -37,6 +38,8 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
   // Mobile: Current column index for swipe navigation
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Refs for mobile tab scroll-into-view
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Use both pointer and touch sensors for mobile
   const sensors = useSensors(
@@ -129,6 +132,13 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
   // Mobile column navigation
   const handleMobileColumnChange = (index: number) => {
     setMobileColumnIndex(index);
+    // Scroll the tab into view
+    tabRefs.current[index]?.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+    // Scroll the column view
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
       const columnWidth = container.offsetWidth;
@@ -158,89 +168,90 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
         </h2>
       </div>
       
-      {/* P1-001: Filter bar - scrollable on mobile */}
-      <div className="px-4 pb-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-4">
-        <div className="flex items-center gap-2 flex-nowrap md:flex-wrap min-w-max md:min-w-0">
-          {/* Agent filter */}
-          {agents.map((agent) => (
-            <button
-              key={agent._id}
-              onClick={() => setFilterAgent(filterAgent === agent._id ? null : agent._id)}
-              className={`flex items-center gap-1 px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[32px] md:min-h-0 ${
-                filterAgent === agent._id
-                  ? "text-white"
-                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-              }`}
-              style={filterAgent === agent._id ? { backgroundColor: agent.avatarColor } : undefined}
-            >
-              <Avatar name={agent.name} color={agent.avatarColor} size="sm" />
-              {agent.name}
-            </button>
-          ))}
-          <div className="w-px h-4 bg-gray-200 shrink-0" />
-          {/* Priority filter */}
-          {(["p0", "p1", "p2", "p3"] as Priority[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setFilterPriority(filterPriority === p ? null : p)}
-              className={`px-2 py-1 md:py-0.5 text-[10px] font-semibold rounded-full transition-colors min-h-[32px] md:min-h-0 ${
-                filterPriority === p
-                  ? "bg-brand-charcoal text-white"
-                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-              }`}
-            >
-              {p.toUpperCase()}
-            </button>
-          ))}
-          <div className="w-px h-4 bg-gray-200 shrink-0" />
-          {/* Tag filter (show top 5) */}
-          {allTags.slice(0, 5).map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setFilterTag(filterTag === tag ? null : tag)}
-              className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[32px] md:min-h-0 whitespace-nowrap ${
-                filterTag === tag
-                  ? "bg-brand-teal text-white"
-                  : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-          {/* Clear filters */}
-          {(filterAgent || filterPriority || filterTag) && (
-            <button
-              onClick={() => { setFilterAgent(null); setFilterPriority(null); setFilterTag(null); }}
-              className="px-2 py-1 md:py-0.5 text-[10px] font-medium text-red-400 hover:text-red-600 transition-colors min-h-[32px] md:min-h-0"
-            >
-              ✕ Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile: Column tabs */}
-      <div className="md:hidden flex items-center gap-1 px-4 pb-2 overflow-x-auto">
-        {COLUMN_ORDER.map((status, index) => (
+      {/* P1-001: Filter bar - scrollable on mobile with fade affordance */}
+      <ScrollableRow className="pb-2" innerClassName="flex items-center gap-2 flex-nowrap md:flex-wrap px-4 md:min-w-0">
+        {/* Agent filter */}
+        {agents.map((agent) => (
           <button
-            key={status}
-            onClick={() => handleMobileColumnChange(index)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors whitespace-nowrap ${
-              mobileColumnIndex === index
-                ? "bg-brand-teal text-white"
-                : "bg-gray-100 text-gray-500"
+            key={agent._id}
+            onClick={() => setFilterAgent(filterAgent === agent._id ? null : agent._id)}
+            className={`flex items-center gap-1 px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[44px] md:min-h-0 ${
+              filterAgent === agent._id
+                ? "text-white"
+                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
             }`}
+            style={filterAgent === agent._id ? { backgroundColor: agent.avatarColor } : undefined}
           >
-            {COLUMN_LABELS[status]}
-            <span className={`px-1.5 py-0.5 text-[9px] rounded ${
-              mobileColumnIndex === index
-                ? "bg-white/20 text-white"
-                : "bg-gray-200 text-gray-400"
-            }`}>
-              {tasksByStatus[status].length}
-            </span>
+            <Avatar name={agent.name} color={agent.avatarColor} size="sm" />
+            {agent.name}
           </button>
         ))}
+        <div className="w-px h-4 bg-gray-200 shrink-0" />
+        {/* Priority filter */}
+        {(["p0", "p1", "p2", "p3"] as Priority[]).map((p) => (
+          <button
+            key={p}
+            onClick={() => setFilterPriority(filterPriority === p ? null : p)}
+            className={`px-2 py-1 md:py-0.5 text-[10px] font-semibold rounded-full transition-colors min-h-[44px] md:min-h-0 ${
+              filterPriority === p
+                ? "bg-brand-charcoal text-white"
+                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+            }`}
+          >
+            {p.toUpperCase()}
+          </button>
+        ))}
+        <div className="w-px h-4 bg-gray-200 shrink-0" />
+        {/* Tag filter (show top 5) */}
+        {allTags.slice(0, 5).map((tag) => (
+          <button
+            key={tag}
+            onClick={() => setFilterTag(filterTag === tag ? null : tag)}
+            className={`px-2 py-1 md:py-0.5 text-[10px] font-medium rounded-full transition-colors min-h-[44px] md:min-h-0 whitespace-nowrap ${
+              filterTag === tag
+                ? "bg-brand-teal text-white"
+                : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+            }`}
+          >
+            {tag}
+          </button>
+        ))}
+        {/* Clear filters */}
+        {(filterAgent || filterPriority || filterTag) && (
+          <button
+            onClick={() => { setFilterAgent(null); setFilterPriority(null); setFilterTag(null); }}
+            className="px-2 py-1 md:py-0.5 text-[10px] font-medium text-red-400 hover:text-red-600 transition-colors min-h-[44px] md:min-h-0"
+          >
+            ✕ Clear
+          </button>
+        )}
+      </ScrollableRow>
+
+      {/* Mobile: Column tabs with scroll affordance */}
+      <div className="md:hidden">
+        <ScrollableRow className="pb-2" innerClassName="flex items-center gap-2 px-4">
+          {COLUMN_ORDER.map((status, index) => (
+            <button
+              key={status}
+              ref={(el) => { tabRefs.current[index] = el; }}
+              onClick={() => handleMobileColumnChange(index)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-semibold uppercase tracking-wider rounded-lg transition-colors whitespace-nowrap min-h-[44px] ${
+                mobileColumnIndex === index
+                  ? "bg-brand-teal text-white"
+                  : "bg-gray-100 text-gray-500"
+              }`}
+            >
+              {COLUMN_LABELS[status]}
+              <span className={`px-1.5 py-0.5 text-[9px] rounded ${
+                mobileColumnIndex === index
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-200 text-gray-400"
+              }`}>
+                {tasksByStatus[status].length}
+              </span>
+            </button>
+          ))}
+        </ScrollableRow>
       </div>
 
       <DndContext

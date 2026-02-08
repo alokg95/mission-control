@@ -52,7 +52,7 @@ export const seed = mutation({
       currentTaskId: undefined,
     });
 
-    const donna = await ctx.db.insert("agents", {
+    await ctx.db.insert("agents", {
       name: "Donna",
       role: "Executive Assistant",
       level: "specialist",

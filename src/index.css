@@ -180,6 +180,11 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Horizontal overscroll containment - prevents accidental back-swipe */
+.overscroll-x-contain {
+  overscroll-behavior-x: contain;
+}
+
 /* Snap scroll for columns */
 .snap-x {
   scroll-snap-type: x mandatory;
