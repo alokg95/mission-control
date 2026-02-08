@@ -272,22 +272,31 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
           ))}
         </div>
 
-        {/* Mobile: Single column with swipe navigation */}
+        {/* Mobile: Single column with swipe navigation - iOS Safari fixes */}
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="md:hidden flex-1 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth hide-scrollbar"
+          className="md:hidden flex-1 hide-scrollbar"
           style={{
-            minHeight: '300px',
-            height: 'calc(100dvh - 200px)',
+            overflowX: 'scroll',  // 'scroll' not 'auto' for iOS Safari
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',  // momentum scroll
+            scrollSnapType: 'x mandatory',
+            touchAction: 'pan-x',  // allow horizontal touch
+            transform: 'translateZ(0)',  // GPU acceleration
+            scrollBehavior: 'smooth',
           }}
         >
-          <div className="flex h-full" style={{ width: `${COLUMN_ORDER.length * 100}%` }}>
+          <div className="flex h-full" style={{ width: `${COLUMN_ORDER.length * 100}%`, minWidth: 'max-content' }}>
             {COLUMN_ORDER.map((status) => (
               <div
                 key={status}
-                className="w-full h-full px-4 pb-4 snap-start snap-always"
-                style={{ width: `${100 / COLUMN_ORDER.length}%` }}
+                className="h-full px-4 pb-4"
+                style={{ 
+                  width: `${100 / COLUMN_ORDER.length}%`,
+                  flexShrink: 0,  // must not shrink
+                  scrollSnapAlign: 'start',  // snap alignment
+                }}
               >
                 <KanbanColumn
                   status={status}

@@ -46,9 +46,9 @@ export function TopBar({ onNewTask }: TopBarProps) {
   }, []);
 
   return (
-    <header className="h-14 md:h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center px-3 md:px-6 shrink-0 safe-area-top pt-[env(safe-area-inset-top)] z-40 relative">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-2 md:gap-3 shrink-0">
+    <header className="h-14 md:h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-3 md:px-6 shrink-0 safe-area-top pt-[env(safe-area-inset-top)] z-40 relative overflow-visible">
+      {/* Left: Logo - fixed width on mobile for centering math */}
+      <div className="flex items-center gap-2 md:gap-3 shrink-0 w-10 md:w-auto">
         <div className="w-8 h-8 bg-brand-teal rounded-lg flex items-center justify-center shrink-0">
           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
@@ -64,25 +64,27 @@ export function TopBar({ onNewTask }: TopBarProps) {
         </span>
       </div>
 
-      {/* Center: Stats - Absolutely positioned for true centering on mobile */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 md:gap-8">
-        <div className="text-center">
-          <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{activeCount}</div>
-          <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium whitespace-nowrap">
-            <span className="hidden sm:inline">Agents </span>Active
+      {/* Center: Stats - uses flex-1 and justify-center for true centering */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center gap-3 md:gap-8">
+          <div className="text-center">
+            <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{activeCount}</div>
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium whitespace-nowrap">
+              <span className="hidden sm:inline">Agents </span>Active
+            </div>
           </div>
-        </div>
-        <div className="w-px h-6 md:h-8 bg-gray-200" />
-        <div className="text-center">
-          <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{taskCount}</div>
-          <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium whitespace-nowrap">
-            <span className="hidden sm:inline">Tasks in </span>Queue
+          <div className="w-px h-6 md:h-8 bg-gray-200" />
+          <div className="text-center">
+            <div className="text-lg md:text-2xl font-bold text-brand-charcoal leading-none">{taskCount}</div>
+            <div className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-medium whitespace-nowrap">
+              <span className="hidden sm:inline">Tasks in </span>Queue
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right: Actions + Clock + Status - pushed to end */}
-      <div className="flex items-center gap-2 md:gap-4 ml-auto shrink-0">
+      {/* Right: Actions + Clock + Status - shrink-0 to preserve center */}
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
         {/* New Task button - icon only on mobile */}
         <button
           onClick={onNewTask}

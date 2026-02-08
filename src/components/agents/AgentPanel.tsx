@@ -29,11 +29,21 @@ export function AgentPanel({ onAgentClick, onAssignTask, onSendMessage }: AgentP
 
       {/* Agent List - horizontal scroll on mobile, vertical scroll on desktop */}
       <div className="flex-1 overflow-visible relative isolate">
-        {/* Mobile: Horizontal scroll carousel - removed negative margin hack */}
-        <div className="md:hidden overflow-x-auto overflow-y-hidden h-full p-3">
-          <div className="flex gap-3 h-full min-w-max pr-4 snap-x snap-mandatory">
+        {/* Mobile: Horizontal scroll carousel - iOS Safari fixes applied */}
+        <div 
+          className="md:hidden h-full p-3 hide-scrollbar"
+          style={{
+            overflowX: 'scroll',  // iOS Safari needs 'scroll' not 'auto'
+            overflowY: 'hidden',
+            WebkitOverflowScrolling: 'touch',  // momentum scroll
+            touchAction: 'pan-x',  // explicitly allow horizontal touch
+            transform: 'translateZ(0)',  // force GPU layer
+            scrollSnapType: 'x mandatory',
+          }}
+        >
+          <div className="flex gap-3 h-full min-w-max pr-4" style={{ scrollSnapType: 'x mandatory' }}>
             {agents.map((agent) => (
-              <div key={agent._id} className="w-[280px] shrink-0 snap-start">
+              <div key={agent._id} className="w-[280px] shrink-0" style={{ scrollSnapAlign: 'start', flexShrink: 0 }}>
                 <AgentCard
                   id={agent._id}
                   name={agent.name}

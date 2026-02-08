@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 interface ScrollableRowProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ interface ScrollableRowProps {
  * to indicate more content is available.
  * 
  * iOS Safari fix: Uses overflow-x: scroll (not auto), explicit touch-action,
- * and ensures no parent elements block touch events.
+ * -webkit-overflow-scrolling: touch, and GPU acceleration.
  */
 export function ScrollableRow({ 
   children, 
@@ -56,8 +56,38 @@ export function ScrollableRow({
     checkScroll();
   }, [children]);
 
+  // iOS Safari horizontal scroll - MUST be inline styles for webkit properties
+  const scrollContainerStyle: CSSProperties = {
+    display: 'flex',
+    overflowX: 'scroll',  // 'scroll' not 'auto' for iOS Safari
+    overflowY: 'hidden',
+    WebkitOverflowScrolling: 'touch',  // momentum scroll on iOS
+    scrollSnapType: 'x mandatory',  // optional but helps
+    touchAction: 'pan-x',  // explicitly allow horizontal touch
+    transform: 'translateZ(0)',  // force GPU layer
+    WebkitTransform: 'translateZ(0)',  // webkit prefix
+    willChange: 'scroll-position',
+    overscrollBehaviorX: 'contain',
+    scrollBehavior: 'smooth',
+    width: '100%',  // explicit width
+  };
+
+  // Inner container style - children must not shrink
+  const innerStyle: CSSProperties = {
+    display: 'flex',
+    flexWrap: 'nowrap',
+    minWidth: 'max-content',
+  };
+
   return (
-    <div className="relative" style={{ touchAction: 'pan-x pan-y' }}>
+    <div 
+      className="relative w-full" 
+      style={{ 
+        touchAction: 'pan-x pan-y',
+        // Parent must NOT have overflow: hidden
+        overflow: 'visible',
+      }}
+    >
       {/* Left fade gradient - NO z-index to avoid blocking touches on iOS */}
       <div 
         className={`absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none transition-opacity duration-200 ${
@@ -67,25 +97,14 @@ export function ScrollableRow({
         style={{ zIndex: 0 }}
       />
       
-      {/* Scrollable content - iOS Safari specific fixes */}
+      {/* Scrollable content - iOS Safari specific fixes via inline styles */}
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
         className={`hide-scrollbar ${className}`}
-        style={{ 
-          overflowX: 'scroll', // iOS Safari needs 'scroll' not 'auto'
-          overflowY: 'hidden',
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'pan-x',
-          scrollBehavior: 'smooth',
-          overscrollBehaviorX: 'contain',
-          scrollPaddingInline: '1.5rem',
-          // Hardware acceleration for smooth iOS scrolling
-          transform: 'translateZ(0)',
-          willChange: 'scroll-position',
-        }}
+        style={scrollContainerStyle}
       >
-        <div className={`min-w-max flex flex-nowrap ${innerClassName}`}>
+        <div className={innerClassName} style={innerStyle}>
           {children}
         </div>
       </div>

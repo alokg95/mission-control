@@ -67,16 +67,38 @@ body {
   background: #94A3B8;
 }
 
-/* Hide scrollbar for horizontal scroll - works on all devices */
+/* Hide scrollbar for horizontal scroll - works on all devices including iOS Safari */
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
   /* Force hardware acceleration for smoother scrolling on iOS */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  /* Ensure touch events work */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari horizontal scroll fix - apply to any element needing horizontal scroll */
+.ios-horizontal-scroll {
+  display: flex;
+  overflow-x: scroll !important;  /* 'scroll' not 'auto' */
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;  /* momentum scroll */
+  scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
+  touch-action: pan-x;  /* explicitly allow horizontal touch */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.ios-horizontal-scroll > * {
+  flex-shrink: 0;  /* children must not shrink */
 }
 
 /* Smooth transitions for card moves */
