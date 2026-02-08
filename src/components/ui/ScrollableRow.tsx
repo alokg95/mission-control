@@ -10,6 +10,9 @@ interface ScrollableRowProps {
 /**
  * A horizontally scrollable row with fade gradients at the edges
  * to indicate more content is available.
+ * 
+ * iOS Safari fix: Uses overflow-x: scroll (not auto), explicit touch-action,
+ * and ensures no parent elements block touch events.
  */
 export function ScrollableRow({ 
   children, 
@@ -54,24 +57,32 @@ export function ScrollableRow({
   }, [children]);
 
   return (
-    <div className="relative">
-      {/* Left fade gradient - reduced width and z-index for iOS Safari */}
+    <div className="relative" style={{ touchAction: 'pan-x pan-y' }}>
+      {/* Left fade gradient - NO z-index to avoid blocking touches on iOS */}
       <div 
-        className={`absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none z-[1] transition-opacity duration-200 ${
+        className={`absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none transition-opacity duration-200 ${
           canScrollLeft ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden="true"
+        style={{ zIndex: 0 }}
       />
       
-      {/* Scrollable content */}
+      {/* Scrollable content - iOS Safari specific fixes */}
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
-        className={`overflow-x-auto scroll-smooth overscroll-x-contain hide-scrollbar ${className}`}
+        className={`hide-scrollbar ${className}`}
         style={{ 
+          overflowX: 'scroll', // iOS Safari needs 'scroll' not 'auto'
+          overflowY: 'hidden',
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-x',
+          scrollBehavior: 'smooth',
+          overscrollBehaviorX: 'contain',
           scrollPaddingInline: '1.5rem',
+          // Hardware acceleration for smooth iOS scrolling
+          transform: 'translateZ(0)',
+          willChange: 'scroll-position',
         }}
       >
         <div className={`min-w-max flex flex-nowrap ${innerClassName}`}>
@@ -79,12 +90,13 @@ export function ScrollableRow({
         </div>
       </div>
       
-      {/* Right fade gradient - reduced width and z-index for iOS Safari */}
+      {/* Right fade gradient - NO z-index to avoid blocking touches on iOS */}
       <div 
-        className={`absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none z-[1] transition-opacity duration-200 ${
+        className={`absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none transition-opacity duration-200 ${
           canScrollRight ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden="true"
+        style={{ zIndex: 0 }}
       />
     </div>
   );
