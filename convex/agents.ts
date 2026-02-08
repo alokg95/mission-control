@@ -24,3 +24,25 @@ export const updateStatus = mutation({
     });
   },
 });
+
+export const create = mutation({
+  args: {
+    name: v.string(),
+    role: v.string(),
+    level: v.union(v.literal("coordinator"), v.literal("specialist"), v.literal("intern")),
+    sessionKey: v.string(),
+    avatarColor: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    return await ctx.db.insert("agents", {
+      name: args.name,
+      role: args.role,
+      level: args.level,
+      status: "idle",
+      sessionKey: args.sessionKey,
+      avatarColor: args.avatarColor,
+      lastHeartbeat: Date.now(),
+    });
+  },
+});

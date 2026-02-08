@@ -52,6 +52,17 @@ export const seed = mutation({
       currentTaskId: undefined,
     });
 
+    const donna = await ctx.db.insert("agents", {
+      name: "Donna",
+      role: "Executive Assistant",
+      level: "specialist",
+      status: "working",
+      sessionKey: "agent:main:cron:donna",
+      avatarColor: "#EC4899",
+      lastHeartbeat: Date.now(),
+      currentTaskId: undefined,
+    });
+
     // Create tasks
     const t1 = await ctx.db.insert("tasks", {
       title: "Fix video export timeout on large files",
