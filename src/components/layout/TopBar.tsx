@@ -46,7 +46,7 @@ export function TopBar({ onNewTask }: TopBarProps) {
   }, []);
 
   return (
-    <header className="h-14 md:h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-3 md:px-6 shrink-0 safe-area-top">
+    <header className="h-14 md:h-14 bg-white/80 backdrop-blur-sm border-b border-brand-teal-light flex items-center justify-between px-3 md:px-6 shrink-0 safe-area-top pt-[env(safe-area-inset-top)] z-40">
       {/* Left: Logo */}
       <div className="flex items-center gap-2 md:gap-3">
         <div className="w-8 h-8 bg-brand-teal rounded-lg flex items-center justify-center shrink-0">

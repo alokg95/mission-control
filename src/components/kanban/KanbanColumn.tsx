@@ -91,7 +91,7 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask, isMobile }
         ref={setNodeRef}
         className={cn(
           "flex-1 overflow-y-auto space-y-2 md:space-y-2 px-1 pb-4 min-h-[100px]",
-          isMobile && "space-y-3 px-0" // More spacing on mobile
+          isMobile && "space-y-3 px-0 pb-8" // More spacing on mobile + extra bottom padding for nav
         )}
       >
         <SortableContext

@@ -131,7 +131,7 @@ export function AgentCard({
               ⋮
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-9 md:top-7 w-48 md:w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-50 py-1">
+              <div className="absolute right-0 top-9 md:top-7 w-48 md:w-44 bg-white rounded-lg shadow-xl border border-gray-100 z-[60] py-1">
                 <button
                   className="w-full text-left px-4 py-3 md:px-3 md:py-2 text-sm md:text-xs text-gray-600 hover:bg-gray-50 active:bg-gray-50 transition-colors"
                   onClick={() => { setShowMenu(false); onAssignTask?.(id); }}

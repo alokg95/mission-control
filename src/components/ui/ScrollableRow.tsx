@@ -55,9 +55,9 @@ export function ScrollableRow({
 
   return (
     <div className="relative">
-      {/* Left fade gradient */}
+      {/* Left fade gradient - reduced width and z-index for iOS Safari */}
       <div 
-        className={`absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${
+        className={`absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r ${fadeColor} to-transparent pointer-events-none z-[1] transition-opacity duration-200 ${
           canScrollLeft ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden="true"
@@ -71,6 +71,7 @@ export function ScrollableRow({
         style={{ 
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-x',
+          scrollPaddingInline: '1.5rem',
         }}
       >
         <div className={`min-w-max flex flex-nowrap ${innerClassName}`}>
@@ -78,9 +79,9 @@ export function ScrollableRow({
         </div>
       </div>
       
-      {/* Right fade gradient */}
+      {/* Right fade gradient - reduced width and z-index for iOS Safari */}
       <div 
-        className={`absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none z-10 transition-opacity duration-200 ${
+        className={`absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l ${fadeColor} to-transparent pointer-events-none z-[1] transition-opacity duration-200 ${
           canScrollRight ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden="true"

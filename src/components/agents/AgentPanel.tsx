@@ -28,10 +28,10 @@ export function AgentPanel({ onAgentClick, onAssignTask, onSendMessage }: AgentP
       </div>
 
       {/* Agent List - horizontal scroll on mobile, vertical scroll on desktop */}
-      <div className="flex-1 overflow-hidden">
-        {/* Mobile: Horizontal scroll carousel */}
-        <div className="md:hidden overflow-x-auto overflow-y-hidden h-full p-3 -mx-1">
-          <div className="flex gap-3 h-full min-w-max px-1 snap-x snap-mandatory">
+      <div className="flex-1 overflow-visible relative isolate">
+        {/* Mobile: Horizontal scroll carousel - removed negative margin hack */}
+        <div className="md:hidden overflow-x-auto overflow-y-hidden h-full p-3">
+          <div className="flex gap-3 h-full min-w-max pr-4 snap-x snap-mandatory">
             {agents.map((agent) => (
               <div key={agent._id} className="w-[280px] shrink-0 snap-start">
                 <AgentCard

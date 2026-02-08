@@ -42,7 +42,7 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+      className="fixed md:absolute inset-x-2 md:inset-x-auto md:right-0 top-16 md:top-10 md:w-80 bg-white rounded-xl md:rounded-xl shadow-2xl border border-gray-100 z-[100] overflow-hidden max-h-[70vh] md:max-h-80"
     >
       <div className="p-3 border-b border-gray-100 flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase tracking-wider text-brand-charcoal">

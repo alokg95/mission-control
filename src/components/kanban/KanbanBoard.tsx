@@ -169,7 +169,7 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
       </div>
       
       {/* P1-001: Filter bar - scrollable on mobile with fade affordance */}
-      <ScrollableRow className="pb-2" innerClassName="flex items-center gap-2 flex-nowrap md:flex-wrap px-4 md:min-w-0">
+      <ScrollableRow className="pb-3" innerClassName="flex items-center gap-2 flex-nowrap md:flex-wrap px-4 pr-8 md:pr-4 md:min-w-0">
         {/* Agent filter */}
         {agents.map((agent) => (
           <button
@@ -227,9 +227,9 @@ export function KanbanBoard({ onTaskClick, onNewTask, onBlockedPrompt }: KanbanB
         )}
       </ScrollableRow>
 
-      {/* Mobile: Column tabs with scroll affordance */}
+      {/* Mobile: Column tabs with scroll affordance - increased padding for edge visibility */}
       <div className="md:hidden">
-        <ScrollableRow className="pb-2" innerClassName="flex items-center gap-2 px-4">
+        <ScrollableRow className="pb-2" innerClassName="flex items-center gap-2 px-4 pr-8">
           {COLUMN_ORDER.map((status, index) => (
             <button
               key={status}

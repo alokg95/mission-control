@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* iOS Safari viewport fix - use dynamic viewport height */
+:root {
+  --app-height: 100vh;
+  --app-height: 100dvh; /* Dynamic viewport height - Safari 15.4+ */
+}
+
+@supports not (height: 100dvh) {
+  :root {
+    --app-height: calc(100vh - env(safe-area-inset-bottom));
+  }
+}
+
 @theme {
   --color-brand-teal: #2ABFBF;
   --color-brand-teal-dark: #1A8F8F;
@@ -23,7 +35,7 @@ body {
   background: linear-gradient(135deg, #E8FAF8 0%, #D4F1F0 50%, #E8FAF8 100%);
   color: #333333;
   margin: 0;
-  min-height: 100vh;
+  min-height: var(--app-height, 100dvh);
   /* Prevent overscroll bounce on iOS */
   overscroll-behavior: none;
   /* Ensure minimum readable font size on mobile */
@@ -186,12 +198,14 @@ body {
   overscroll-behavior-x: contain;
 }
 
-/* Snap scroll for columns */
+/* Snap scroll for columns - with webkit prefix for iOS Safari */
 .snap-x {
   scroll-snap-type: x mandatory;
+  -webkit-scroll-snap-type: x mandatory;
 }
 .snap-start {
   scroll-snap-align: start;
+  -webkit-scroll-snap-align: start;
 }
 .snap-always {
   scroll-snap-stop: always;

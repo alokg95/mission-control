@@ -26,13 +26,13 @@ function Dashboard() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("tasks");
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="flex flex-col overflow-hidden" style={{ height: 'var(--app-height, 100dvh)' }}>
       <ErrorBoundary fallbackLabel="Top Bar">
         <TopBar onNewTask={() => setShowCreateModal(true)} />
       </ErrorBoundary>
       
       {/* Desktop: 3-panel layout / Mobile: single panel based on tab */}
-      <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
+      <div className="flex flex-1 overflow-hidden pb-20 md:pb-0">
         {/* Agent Panel - visible on desktop, or when mobileTab is "agents" */}
         <div className={`${mobileTab === "agents" ? "flex" : "hidden"} md:flex w-full md:w-auto`}>
           <ErrorBoundary fallbackLabel="Agents">
