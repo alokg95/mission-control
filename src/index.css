@@ -55,15 +55,16 @@ body {
   background: #94A3B8;
 }
 
-/* Hide scrollbar on mobile for horizontal scroll */
-@media (max-width: 767px) {
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+/* Hide scrollbar for horizontal scroll - works on all devices */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  /* Force hardware acceleration for smoother scrolling on iOS */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Smooth transitions for card moves */

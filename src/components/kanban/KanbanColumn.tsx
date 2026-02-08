@@ -99,8 +99,8 @@ export function KanbanColumn({ status, tasks, onTaskClick, onNewTask, isMobile }
           strategy={verticalListSortingStrategy}
         >
           {tasks.length === 0 ? (
-            // P1-016: Empty column state
-            <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+            // P1-016: Empty column state - w-full ensures horizontal centering
+            <div className="w-full h-full min-h-[200px] flex flex-col items-center justify-center py-12 text-gray-300">
               <div className="text-3xl md:text-2xl mb-2">
                 {status === "inbox" ? "📥" : status === "done" ? "✅" : status === "blocked" ? "🚧" : "📋"}
               </div>

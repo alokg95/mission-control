@@ -68,8 +68,12 @@ export function ScrollableRow({
         ref={scrollRef}
         onScroll={checkScroll}
         className={`overflow-x-auto scroll-smooth overscroll-x-contain hide-scrollbar ${className}`}
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-x',
+        }}
       >
-        <div className={`min-w-max ${innerClassName}`}>
+        <div className={`min-w-max flex flex-nowrap ${innerClassName}`}>
           {children}
         </div>
       </div>
