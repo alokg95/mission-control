@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAgents, useMutations } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import type { Priority } from "../../types";
 import { PRIORITY_LABELS, PRIORITY_COLORS } from "../../types";
+import { useModalKeyboard } from "../../lib/use-modal-keyboard";
 
 interface CreateTaskModalProps {
   onClose: () => void;
@@ -22,31 +23,9 @@ export function CreateTaskModal({ onClose, preSelectedAgentId }: CreateTaskModal
   const [tags, setTags] = useState<string[]>([]);
   // P0-010: title validation
   const [titleError, setTitleError] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  // P1-007: Focus trap + Escape
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  
+  // P1-007: Focus trap + Escape (extracted to hook)
+  const modalRef = useModalKeyboard(onClose);
 
   const handleAddTag = () => {
     const tag = tagInput.trim().toLowerCase();

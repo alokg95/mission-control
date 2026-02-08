@@ -5,19 +5,13 @@ import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { StatusDot } from "../ui/StatusDot";
 import { timeAgo, absoluteTime } from "../../lib/utils";
-import { LEVEL_LABELS } from "../../types";
+import { LEVEL_LABELS, LEVEL_VARIANTS, getStatusColor } from "../../types";
 import type { AgentLevel, AgentStatus } from "../../types";
 
 interface AgentDetailPanelProps {
   agentId: string;
   onClose: () => void;
 }
-
-const levelVariants: Record<AgentLevel, "teal" | "dark" | "amber"> = {
-  coordinator: "teal",
-  specialist: "dark",
-  intern: "amber",
-};
 
 export function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelProps) {
   const agents = useAgents();
@@ -63,7 +57,7 @@ export function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelProps) {
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-lg font-bold text-brand-charcoal">{agent.name}</h2>
-                  <Badge variant={levelVariants[agent.level as AgentLevel]}>
+                  <Badge variant={LEVEL_VARIANTS[agent.level as AgentLevel]}>
                     {LEVEL_LABELS[agent.level as AgentLevel]}
                   </Badge>
                 </div>
@@ -72,14 +66,7 @@ export function AgentDetailPanel({ agentId, onClose }: AgentDetailPanelProps) {
                   <StatusDot status={agent.status as AgentStatus} pulse={agent.status === "working"} />
                   <span
                     className="text-[11px] md:text-[10px] font-semibold uppercase tracking-wider"
-                    style={{
-                      color:
-                        agent.status === "working"
-                          ? "#2ABFBF"
-                          : agent.status === "blocked"
-                            ? "#E74C3C"
-                            : "#94A3B8",
-                    }}
+                    style={{ color: getStatusColor(agent.status as AgentStatus) }}
                   >
                     {agent.status}
                   </span>

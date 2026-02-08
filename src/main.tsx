@@ -6,11 +6,15 @@ import "./index.css";
 import App from "./App";
 import { USE_CONVEX, MockStoreProvider } from "./lib/store-context";
 
+// Create client outside component to avoid recreation on every render
+const convexClient = USE_CONVEX
+  ? new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string)
+  : null;
+
 function Root() {
-  if (USE_CONVEX) {
-    const client = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+  if (USE_CONVEX && convexClient) {
     return (
-      <ConvexProvider client={client}>
+      <ConvexProvider client={convexClient}>
         <App />
       </ConvexProvider>
     );

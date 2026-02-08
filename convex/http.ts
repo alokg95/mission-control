@@ -63,11 +63,8 @@ http.route({
       );
     }
 
-    // Look up agent by name
-    const agents = await ctx.runQuery(api.agents.list);
-    const agent = agents.find(
-      (a: { name: string }) => a.name.toLowerCase() === agentName.toLowerCase()
-    );
+    // Look up agent by name using indexed query
+    const agent = await ctx.runQuery(api.agents.getByName, { name: agentName });
 
     if (!agent) {
       return new Response(

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
 import { StatusDot } from "../ui/StatusDot";
-import { LEVEL_LABELS } from "../../types";
+import { LEVEL_LABELS, LEVEL_VARIANTS, getStatusColor } from "../../types";
 import type { AgentLevel, AgentStatus } from "../../types";
 import { useTasks } from "../../lib/store-context";
 
@@ -18,12 +18,6 @@ interface AgentCardProps {
   onAssignTask?: (agentId: string) => void;
   onSendMessage?: (agentId: string) => void;
 }
-
-const levelVariants: Record<AgentLevel, "teal" | "dark" | "amber"> = {
-  coordinator: "teal",
-  specialist: "dark",
-  intern: "amber",
-};
 
 export function AgentCard({
   id,
@@ -87,21 +81,14 @@ export function AgentCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-sm text-brand-charcoal">{name}</span>
-              <Badge variant={levelVariants[level]}>{LEVEL_LABELS[level]}</Badge>
+              <Badge variant={LEVEL_VARIANTS[level]}>{LEVEL_LABELS[level]}</Badge>
             </div>
             <div className="text-xs md:text-[11px] text-gray-400 mt-0.5">{role}</div>
             <div className="flex items-center gap-1.5 mt-2 md:mt-1.5">
               <StatusDot status={status} pulse={status === "working"} />
               <span
                 className="text-[11px] md:text-[10px] font-semibold uppercase tracking-wider"
-                style={{
-                  color:
-                    status === "working"
-                      ? "#2ABFBF"
-                      : status === "blocked"
-                        ? "#E74C3C"
-                        : "#94A3B8",
-                }}
+                style={{ color: getStatusColor(status) }}
               >
                 {status}
               </span>

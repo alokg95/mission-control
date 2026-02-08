@@ -35,6 +35,18 @@ export const STATUS_COLORS: Record<AgentStatus, string> = {
   offline: "#CBD5E1",
 };
 
+// Helper to get status color for inline styles
+export function getStatusColor(status: AgentStatus): string {
+  return STATUS_COLORS[status] ?? STATUS_COLORS.idle;
+}
+
+// Badge variants for agent levels (DRY extraction from AgentCard/AgentDetailPanel)
+export const LEVEL_VARIANTS: Record<AgentLevel, "teal" | "dark" | "amber"> = {
+  coordinator: "teal",
+  specialist: "dark",
+  intern: "amber",
+};
+
 export const PRIORITY_COLORS: Record<Priority, string> = {
   p0: "#E74C3C",
   p1: "#F59E0B",

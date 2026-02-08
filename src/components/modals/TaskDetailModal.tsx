@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useAgents, useMessagesByTask, useTasks, useMutations } from "../../lib/store-context";
 import { Avatar } from "../ui/Avatar";
 import { Badge } from "../ui/Badge";
@@ -12,6 +12,7 @@ import type { TaskStatus, Priority } from "../../types";
 import { getValidNextStatuses } from "../../lib/task-state-machine";
 import { extractMentions, renderWithMentions } from "../../lib/mention-parser";
 import { useToast } from "../../lib/toast";
+import { useModalKeyboard } from "../../lib/use-modal-keyboard";
 
 interface TaskDetailModalProps {
   taskId: string;
@@ -30,32 +31,9 @@ export function TaskDetailModal({ taskId, onClose, onBlockedPrompt }: TaskDetail
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task?.title ?? "");
   const [editDesc, setEditDesc] = useState(task?.description ?? "");
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  // P1-007: Focus trap + Escape to close
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-      // Trap tab
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
+  
+  // P1-007: Focus trap + Escape to close (extracted to hook)
+  const modalRef = useModalKeyboard(onClose);
 
   if (!task) return null;
 

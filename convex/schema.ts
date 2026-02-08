@@ -16,7 +16,7 @@ export default defineSchema({
       thinkingLevel: v.optional(v.string()),
       autonomy: v.optional(v.string()),
     })),
-  }),
+  }).index("by_name", ["name"]),
 
   tasks: defineTable({
     title: v.string(),
@@ -65,7 +65,7 @@ export default defineSchema({
     taskId: v.optional(v.id("tasks")),
     message: v.string(),
     metadata: v.optional(v.any()),
-  }),
+  }).index("by_type", ["type"]),
 
   documents: defineTable({
     title: v.string(),

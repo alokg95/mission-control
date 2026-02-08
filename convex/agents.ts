@@ -9,6 +9,19 @@ export const list = query({
   },
 });
 
+// Efficient lookup by name using index (for HTTP API)
+export const getByName = query({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    // Case-insensitive search: index stores as-is, so we check lowercase match
+    const agents = await ctx.db
+      .query("agents")
+      .withIndex("by_name")
+      .collect();
+    return agents.find((a) => a.name.toLowerCase() === args.name.toLowerCase()) ?? null;
+  },
+});
+
 export const updateStatus = mutation({
   args: {
     agentId: v.id("agents"),

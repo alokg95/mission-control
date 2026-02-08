@@ -1,6 +1,7 @@
 // P0-008: Blocked reason prompt modal
 import { useState, useEffect, useRef } from "react";
 import { useMutations } from "../../lib/store-context";
+import { useModalKeyboard } from "../../lib/use-modal-keyboard";
 
 interface BlockedReasonModalProps {
   taskId: string;
@@ -12,19 +13,13 @@ export function BlockedReasonModal({ taskId, taskTitle, onClose }: BlockedReason
   const [reason, setReason] = useState("");
   const mutations = useMutations();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // P1-007: Escape to close (extracted to hook, no focus trap needed for simple modal)
+  useModalKeyboard(onClose, { trapFocus: false });
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  // P1-007: focus trap + Escape to close
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
 
   const handleSubmit = () => {
     if (!reason.trim()) return;
